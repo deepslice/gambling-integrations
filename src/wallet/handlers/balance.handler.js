@@ -53,10 +53,8 @@ export async function getBalanceHandler(req, res) {
 
       if (!user) {
         res.status(200).json({
-          operatorId: 10679001,
-          errorCode: 7,
-          errorDescription: 'User not found',
-          timestamp: Date.now(),
+          error: 'Invalid Player',
+          errorCode: 1,
         }).end()
         console.error('user not found')
         return

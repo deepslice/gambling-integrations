@@ -42,10 +42,9 @@ export async function gameInitHandler(req, res) {
     await client.setEx(`aspect-initial-token:${token}`, 60, JSON.stringify({user, prefix}))
 
     const url = await axios.get(`https://uat.aspectgaming.com/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`).then(resp => {
-      console.log(resp.data)
-      return resp.data.URl || null
+      return resp.config.url || null
     }).catch((error) => {
-      console.error(error)
+      console.error('error ',error)
       return null
     })
 
