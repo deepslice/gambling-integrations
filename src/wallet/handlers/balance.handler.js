@@ -99,7 +99,7 @@ export async function getBalanceHandler(req, res) {
       let rate = 1
 
       if (user.currency === 'TOM') {
-        rate = await client.get(`exchage-rate:tom:to:usd`).then(Number)
+        rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
 
         const [[userBalance]] = await trx.query(`
             select id                                      as id,
