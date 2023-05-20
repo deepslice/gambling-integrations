@@ -15,8 +15,8 @@ export async function creditHandler(req, res) {
 
   if (!data) {
     const response = {
-      'error': 'Invalid Token',
-      'errorCode': 1002,
+      error: 'Invalid Token',
+      errorCode: 1002,
     }
     res.status(200).json(response).end()
     console.error('data')
@@ -72,8 +72,8 @@ export async function creditHandler(req, res) {
 
       if (!user) {
         const response = {
-          'error': 'Invalid Player',
-          'errorCode': 1,
+          error: 'Invalid Player',
+          errorCode: 1001,
         }
         res.status(200).json(response).end()
         console.error('user not found')
@@ -140,15 +140,28 @@ export async function creditHandler(req, res) {
           select *
           from casino_transactions
           where transaction_id = concat(?, ?)
-      `, ['as:', transactionId])
+      `, [transactionId, ':WIN'])
 
       if (transaction) {
-        if (transaction.action === 'ROLLBACK') {
-          res.status(500).end()
-          await trx.rollback()
-          return
-        }
         res.status(500).end()
+        console.error('already passed this transaction key')
+        await trx.rollback()
+        return
+      }
+
+      const [[checkBet]] = await trx.query(`
+          select *
+          from casino_transactions
+          where transaction_id = concat(?, ?)
+      `, [transactionId, ':BET'])
+
+      if (!checkBet) {
+        const response = {
+          error: 'Could Not Rollback After Credit',
+          errorCode: 1024,
+        }
+        res.status(200).json(response).end()
+        console.error('Could Not Rollback After Credit')
         await trx.rollback()
         return
       }
@@ -157,7 +170,7 @@ export async function creditHandler(req, res) {
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                            currency, session_id, section)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [amount, 'as:', transactionId, user.id, 'WIN', 'aspect',
+      `, [amount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
         game.provider, game.uuid, project.currency, token, game.section])
 
       const [[balanceLimit]] = await trx.query(`

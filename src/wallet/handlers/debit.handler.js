@@ -15,8 +15,8 @@ export async function debitHandler(req, res) {
 
   if (!data) {
     const response = {
-      'error': 'Invalid Token',
-      'errorCode': 1002,
+      error: 'Invalid Token',
+      errorCode: 1002,
     }
     res.status(200).json(response).end()
     console.error('data')
@@ -73,8 +73,8 @@ export async function debitHandler(req, res) {
 
       if (!user) {
         const response = {
-          'error': 'Invalid Player',
-          'errorCode': 1,
+          error: 'Invalid Player',
+          errorCode: 1,
         }
         res.status(200).json(response).end()
         console.error('user not found')
@@ -138,8 +138,8 @@ export async function debitHandler(req, res) {
 
       if (user.balance < amount) {
         const response = {
-          'error': 'Insufficient Funds',
-          'errorCode': 1003,
+          error: 'Insufficient Funds',
+          errorCode: 1003,
         }
         res.status(200).json(response).end()
         console.error('insufficient founds')
@@ -151,15 +151,11 @@ export async function debitHandler(req, res) {
           select *
           from casino_transactions
           where transaction_id = concat(?, ?)
-      `, ['as:', transactionId])
+      `, [transactionId, ':BET'])
 
       if (transaction) {
-        if (transaction.action === 'ROLLBACK') {
-          res.status(500).end()
-          await trx.rollback()
-          return
-        }
         res.status(500).end()
+        console.error('already passed this transaction key')
         await trx.rollback()
         return
       }
@@ -172,8 +168,8 @@ export async function debitHandler(req, res) {
 
       if (limit?.betLimit < 0) {
         const response = {
-          'error': 'Insufficient Funds',
-          'errorCode': 1003,
+          error: 'Insufficient Funds',
+          errorCode: 1003,
         }
         res.status(200).json(response).end()
         console.error('low limit')
@@ -185,7 +181,7 @@ export async function debitHandler(req, res) {
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                            currency, session_id, bet_transaction_id, section)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [amount, 'as:', transactionId, user.id, 'BET', 'aspect',
+      `, [amount, transactionId, ':BET', user.id, 'BET', 'aspect',
         game.provider, game.uuid, user.currency, token, transactionId, game.section])
 
       await trx.query(`

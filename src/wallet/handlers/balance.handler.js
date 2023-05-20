@@ -5,14 +5,15 @@ import mysql2 from 'mysql2/promise'
 
 export async function getBalanceHandler(req, res) {
   const token = req.query.token
+  const uuid = req.query.gameId
   const client = await getRedisClient()
 
   const data = await client.get(`aspect-initial-token:${token}`).then(JSON.parse)
 
   if (!data) {
     res.status(200).json({
-      'error': 'Invalid Token',
-      'errorCode': 1002,
+      error: 'Invalid Token',
+      errorCode: 1002,
     }).end()
     console.error('data')
     return
@@ -30,6 +31,12 @@ export async function getBalanceHandler(req, res) {
         from global.settings
         where prefix = ?
     `, [data.prefix])
+
+    if (!project) {
+      res.status(500).end()
+      console.error('prefix error')
+      return
+    }
 
     const [[bonus]] = await pool.query(`
         select cast(value as json) as value
@@ -54,13 +61,38 @@ export async function getBalanceHandler(req, res) {
       if (!user) {
         res.status(200).json({
           error: 'Invalid Player',
-          errorCode: 1,
+          errorCode: 1001,
         }).end()
         console.error('user not found')
         return
       }
 
-      if (bonus && !bonus.value['live-casino']) {
+      const [[game]] = await trx.query(`
+          select g.uuid                      as uuid,
+                 g.provider                  as provider,
+                 g.aggregator                as aggregator,
+                 g.site_section              as section,
+                 g.name                      as name,
+                 g.provider_uid              as providerUid,
+                 ifnull(cg.active, g.active) as active
+          from casino.games g
+                   left join casino_games cg on g.uuid = cg.uuid
+          where g.uuid = concat('as:', ?)
+            and g.deleted = 0
+            and aggregator = 'aspect'
+      `, [uuid])
+
+      if (!game || !game.active) {
+        res.status(200).json({
+          error: 'Invalid Game ID',
+          errorCode: 1008,
+        }).end()
+        console.error('game not found')
+        await trx.rollback()
+        return
+      }
+
+      if (bonus && !bonus.value[game.section]) {
         user.balance = user.realBalance
       }
 

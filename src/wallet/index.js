@@ -14,7 +14,7 @@ app.use(logger)
 app.get('/api/balance', handlers.middleware, handlers.getBalanceHandler)
 app.post('/api/debit', handlers.middleware, handlers.debitHandler)
 app.post('/api/credit', handlers.middleware, handlers.creditHandler)
-app.post('/api/rollback', handlers.middleware)
+app.post('/api/rollback', handlers.middleware, handlers.rollbackHandler)
 
 
 const server = http.createServer(app)

@@ -24,8 +24,8 @@ export async function middleware(req, res, next) {
 
   if (!data) {
     const response = {
-      'error': 'Invalid Token',
-      'errorCode': 1002,
+      error: 'Invalid Token',
+      errorCode: 1002,
     }
     res.status(200).json(response).end()
     return
@@ -40,9 +40,15 @@ export async function middleware(req, res, next) {
   `, [prefix])
 
   const secretKey = project.configs.secretKey
+  const operatorId = project.configs.operatorId
 
   const secretToken = crypto.createHash('md5').update(`${secretKey}` + `${req.originalUrl}`).digest('hex')
 
+  if (operatorId !== req.query.operatorId) {
+    res.status(500).end()
+    console.error('middleware operatorId')
+    return
+  }
 
   if (`AUTH ${secretToken}` === authorization) {
     next()
@@ -50,8 +56,8 @@ export async function middleware(req, res, next) {
   }
 
   const response = {
-    'error': 'Invalid Token',
-    'errorCode': 1002,
+    error: 'Invalid Token',
+    errorCode: 1002,
   }
 
   res.status(200).json(response).end()

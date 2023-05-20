@@ -5,8 +5,6 @@ import mysql2 from 'mysql2/promise'
 
 export async function rollbackHandler(req, res) {
   const token = req.query.token
-  const amount = Number(req.query.amount)
-  const userId = Number(req.body.uid)
   const transactionId = req.query.transactionKey
   const uuid = req.query.gameId
 
@@ -16,8 +14,8 @@ export async function rollbackHandler(req, res) {
 
   if (!data) {
     const response = {
-      'error': 'Invalid Token',
-      'errorCode': 1002,
+      error: 'Invalid Token',
+      errorCode: 1002,
     }
     res.status(200).json(response).end()
     console.error('data')
@@ -74,8 +72,8 @@ export async function rollbackHandler(req, res) {
 
       if (!user) {
         const response = {
-          'error': 'Invalid Player',
-          'errorCode': 1,
+          error: 'Invalid Player',
+          errorCode: 1001,
         }
         res.status(200).json(response).end()
         console.error('user not found')
@@ -92,8 +90,8 @@ export async function rollbackHandler(req, res) {
                  g.provider_uid as providerUid
           from casino.games g
                    left join casino_games cg on g.uuid = cg.uuid
-          where g.uuid = concat('ezu_', ?)
-            and aggregator = 'ezugi'
+          where g.uuid = concat('as:', ?)
+            and aggregator = 'aspect'
       `, [uuid])
 
       if (!game) {
@@ -119,7 +117,7 @@ export async function rollbackHandler(req, res) {
                    greatest(0, (balance - plus_bonus)) / ? as realBalance
             from users
             where id = ?
-        `, [rate, rate, userId])
+        `, [rate, rate, user.id])
 
         if (bonus && !bonus.value[game.section]) {
           userBalance.balance = userBalance.realBalance
@@ -133,14 +131,14 @@ export async function rollbackHandler(req, res) {
           select *
           from casino_transactions
           where transaction_id = concat(?, ?)
-      `, ['ez_', transactionId])
+      `, ['as:', transactionId])
 
       if (!transaction) {
         await trx.query(`
             insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                              currency, session_id, section)
             values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [0, 'ez_', transactionId, userId, 'ROLLBACK', 'ezugi',
+        `, [0, 'as:', transactionId, user.id, 'ROLLBACK', 'aspect',
           game.provider, game.uuid, project.currency, token, game.section])
 
         const response = {
@@ -156,33 +154,27 @@ export async function rollbackHandler(req, res) {
       switch (transaction.action) {
         case 'ROLLBACK':
           const response = {
-            operatorId: 10679001,
-            uid: `${user.id}`,
-            token,
-            balance: fixNumber(user.balance),
-            transactionId,
-            currency: project.currency,
-            errorCode: 0,
-            errorDescription: 'Transaction already processed',
-            timestamp: Date.now(),
+            success: true,
+            balance: user.balance,
           }
           res.status(200).json(response).end()
           await trx.rollback()
           return
         case 'WIN': {
-          await trx.query(`
-              update users
-              set balance = balance - ? * ?
-              where id = ?
-          `, [transaction.amount, rate, userId])
-          break
+          const response = {
+            error: 'Could Not Rollback After Credit',
+            errorCode: 1024,
+          }
+          res.status(200).json(response).end()
+          await trx.rollback()
+          return
         }
         case 'BET': {
           await trx.query(`
               update users
               set balance = balance + ? * ?
               where id = ?
-          `, [transaction.amount, rate, userId])
+          `, [transaction.amount, rate, user.id])
           break
         }
       }
@@ -200,7 +192,7 @@ export async function rollbackHandler(req, res) {
                  least(balance, plus_bonus)                                     as plusBonus
           from users
           where id = ?
-      `, [userId])
+      `, [user.id])
 
       console.error(JSON.stringify(updatedBalance))
 
@@ -225,23 +217,16 @@ export async function rollbackHandler(req, res) {
       await trx.query(`
           insert into balance_history (user_id, type, amount, balance, info)
           values (?, 10, ? * ?, ?, ?)
-      `, [userId, transaction.action === 'BET' ? transaction.amount : -transaction.amount, rate, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
+      `, [user.id, transaction.action === 'BET' ? transaction.amount : -transaction.amount, rate, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
 
       if (bonus && !bonus.value[game.section]) {
         updatedBalance.balance = updatedBalance.realBalance
       }
-      console.log('rollback ezugi amount,body,Date', transaction.amount, Date.now())
+      console.log('rollback aspect amount,body,Date', transaction.amount, Date.now())
 
       const response = {
-        operatorId: 10679001,
-        uid: `${user.id}`,
-        token,
-        balance: fixNumber(updatedBalance.balance),
-        transactionId,
-        currency: project.currency,
-        errorCode: 0,
-        errorDescription: 'OK',
-        timestamp: Date.now(),
+        success: true,
+        balance: updatedBalance.balance,
       }
 
       await trx.commit()
