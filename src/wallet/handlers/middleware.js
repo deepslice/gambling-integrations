@@ -49,7 +49,7 @@ export async function middleware(req, res, next) {
 
     const secretToken = crypto.createHash('md5').update(`${secretKey}` + `${req.originalUrl}`).digest('hex')
 
-    if (operatorId !== req.query.operatorId) {
+    if (Number(operatorId) !== Number(req.query.operatorId)) {
       res.status(500).end()
       console.error('middleware operatorId')
       return
