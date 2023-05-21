@@ -2,6 +2,7 @@ import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
+import {fixNumber} from './constats.js'
 
 export async function rollbackHandler(req, res) {
   const token = req.query.token
@@ -143,7 +144,7 @@ export async function rollbackHandler(req, res) {
 
         const response = {
           success: true,
-          balance: user.balance,
+          balance: fixNumber(user.balance),
         }
 
         res.status(200).json(response).end()
@@ -186,10 +187,10 @@ export async function rollbackHandler(req, res) {
       `, [transaction.id])
 
       const [[updatedBalance]] = await trx.query(`
-          select (balance / ${rate})                             as balance,
-                 (greatest(0, (balance - plus_bonus)) / ${rate}) as realBalance,
-                 greatest(0, (balance - plus_bonus))             as historyBalance,
-                 least(balance, plus_bonus)                      as plusBonus
+          select cast((balance / ${rate}) as float)                             as balance,
+                 cast((greatest(0, (balance - plus_bonus)) / ${rate}) as float) as realBalance,
+                 greatest(0, (balance - plus_bonus))                            as historyBalance,
+                 least(balance, plus_bonus)                                     as plusBonus
           from users
           where id = ?
       `, [user.id])
@@ -226,7 +227,7 @@ export async function rollbackHandler(req, res) {
 
       const response = {
         success: true,
-        balance: updatedBalance.balance,
+        balance: fixNumber(updatedBalance.balance),
       }
 
       await trx.commit()

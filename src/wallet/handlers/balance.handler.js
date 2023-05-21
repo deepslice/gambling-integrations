@@ -2,6 +2,7 @@ import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
+import {fixNumber} from './constats.js'
 
 export async function getBalanceHandler(req, res) {
   const token = req.query.token
@@ -119,7 +120,7 @@ export async function getBalanceHandler(req, res) {
 
       const response = {
         success: true,
-        balance: user.balance,
+        balance: fixNumber(user.balance),
       }
 
 
