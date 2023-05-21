@@ -49,7 +49,7 @@ export async function middleware(req, res, next) {
     const secretKey = project.configs.secretKey
     const operatorId = project.configs.operatorId
 
-    const secret = `${secretKey}` + `/` + `${req.originalUrl.substring(4)}`
+    const secret = `${secretKey}` + `${req.originalUrl.substring(4)}`
 
     console.log('secret--------', secret)
 
