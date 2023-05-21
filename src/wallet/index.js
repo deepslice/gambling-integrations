@@ -11,6 +11,7 @@ app.use(express.json())
 app.use(logger)
 
 
+app.get('/api/authenticate', handlers.middleware, handlers.authenticateHandler)
 app.get('/api/balance', handlers.middleware, handlers.getBalanceHandler)
 app.post('/api/debit', handlers.middleware, handlers.debitHandler)
 app.post('/api/credit', handlers.middleware, handlers.creditHandler)
