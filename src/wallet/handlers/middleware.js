@@ -53,6 +53,7 @@ export async function middleware(req, res, next) {
 
   if (`AUTH ${secretToken}` === authorization) {
     next()
+    console.log('next-------')
     return
   }
 
