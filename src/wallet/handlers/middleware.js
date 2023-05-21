@@ -76,6 +76,7 @@ export async function middleware(req, res, next) {
 
     res.status(200).json(response).end()
     console.error('AUTH')
+    return
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
