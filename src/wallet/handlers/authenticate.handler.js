@@ -54,7 +54,7 @@ export async function authenticateHandler(req, res) {
           and aggregator = 'aspect'
     `, [uuid])
 
-    if (!game || !game.active) {
+    if (!game) {
       res.status(200).json({
         error: 'Invalid Game ID',
         errorCode: 1008,
