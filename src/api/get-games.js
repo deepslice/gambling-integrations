@@ -22,13 +22,13 @@ export async function getGames() {
   `, ['twin'])
 
   const operatorId = project.configs.operatorId
-  
+
   const data = await axios.get(`https://uat.aspectgaming.com/agp-api/settings/games?operatorId=${operatorId}&language=en-US`, {
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
     },
   }).then(({data}) => {
-    return data
+    return data.games
   })
   return data
 }
