@@ -22,6 +22,8 @@ export async function middleware(req, res, next) {
     const token = req.query.token
     const authorization = req.headers['authorization']
 
+    console.log(authorization)
+
     const client = await getRedisClient()
 
     const data = await client.get(`aspect-initial-token:${token}`).then(JSON.parse)
