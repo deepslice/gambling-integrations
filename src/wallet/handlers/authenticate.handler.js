@@ -1,6 +1,7 @@
 import {getRedisClient} from '../../utils/redis.js'
 import {getPool, pool} from '../pool.js'
 import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
+import {fixNumber} from './constats.js'
 
 export async function authenticateHandler(req, res) {
   try {
@@ -109,7 +110,7 @@ export async function authenticateHandler(req, res) {
       authenticated: true,
       username: user.userName,
       currency: 'USD',
-      balance: user.balance,
+      balance: fixNumber(user.balance),
     }
 
     res.status(200).json(response).end()
