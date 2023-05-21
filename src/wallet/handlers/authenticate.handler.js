@@ -106,7 +106,7 @@ export async function authenticateHandler(req, res) {
   const response = {
     authenticated: true,
     username: user.userName,
-    currency: user.currency,
+    currency: 'USD',
     balance: user.balance,
   }
 
