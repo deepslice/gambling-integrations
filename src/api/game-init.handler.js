@@ -20,7 +20,7 @@ const pool = mysql2.createPool({
 export async function gameInitHandler(req, res) {
   try {
     const {game, user, prefix} = req.body
-    const gameId = game.uuid.split(':')[1]
+    const gameId = game.split(':')[1]
 
     const [[project]] = await pool.query(`
         select cast(configs as json) as configs
