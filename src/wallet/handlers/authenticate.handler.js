@@ -6,7 +6,7 @@ export async function authenticateHandler(req, res) {
   try {
     const token = req.query.token
     const uuid = req.query.gameId
-    const operatorId = req.query.operatorId
+    const operatorId = Number(req.query.operatorId)
 
     const client = await getRedisClient()
 
