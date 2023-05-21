@@ -197,10 +197,10 @@ export async function debitHandler(req, res) {
       `, [amount, rate, user.id])
 
       const [[updatedBalance]] = await trx.query(`
-          select cast((balance / ${rate}) as float)                             as balance,
-                 cast((greatest(0, (balance - plus_bonus)) / ${rate}) as float) as realBalance,
-                 greatest(0, (balance - plus_bonus))                            as historyBalance,
-                 least(balance, plus_bonus)                                     as plusBonus
+          select (balance / ${rate})                             as balance,
+                 (greatest(0, (balance - plus_bonus)) / ${rate}) as realBalance,
+                 greatest(0, (balance - plus_bonus))             as historyBalance,
+                 least(balance, plus_bonus)                      as plusBonus
           from users
           where id = ?
       `, [user.id])

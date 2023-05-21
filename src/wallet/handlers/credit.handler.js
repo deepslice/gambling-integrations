@@ -205,11 +205,11 @@ export async function creditHandler(req, res) {
       }
 
       const [[updatedBalance]] = await trx.query(`
-          select cast((balance / ${rate}) as float)                             as balance,
-                 cast((greatest(0, (balance - plus_bonus)) / ${rate}) as float) as realBalance,
-                 greatest(0, (balance - plus_bonus))                            as historyBalanceAfterDrop,
-                 greatest(0, (balance - plus_bonus)) + ?                        as historyBalanceBeforeDrop,
-                 least(balance, plus_bonus)                                     as plusBonus
+          select (balance / ${rate})                             as balance,
+                 (greatest(0, (balance - plus_bonus)) / ${rate}) as realBalance,
+                 greatest(0, (balance - plus_bonus))             as historyBalanceAfterDrop,
+                 greatest(0, (balance - plus_bonus)) + ?         as historyBalanceBeforeDrop,
+                 least(balance, plus_bonus)                      as plusBonus
           from users
           where id = ?
       `, [drop, user.id])
