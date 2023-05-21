@@ -2,7 +2,6 @@ import mysql2 from 'mysql2/promise'
 import {CronJob} from 'cron'
 import {getCurrentDatetime} from '../utils/get-current-datetime.js'
 import {getGames} from '../api/get-games.js'
-import {getProductId, Products, providers, uid} from '../api/constats.js'
 
 /** @type {mysql2.Pool} */
 const pool = mysql2.createPool({
@@ -35,7 +34,7 @@ async function main() {
     await pool.query(`
         select *
         from casino.games
-        where aggregator = 'gamingsoft'
+        where aggregator = 'aspect'
     `)
       .then(([games]) => games.forEach(game => {
         existingGamesSet.add(game.uuid)
@@ -46,9 +45,9 @@ async function main() {
 
     await getGames().then(games => {
       games.forEach(game => {
-        receivedGamesSet.add(`as:${game.GameCode}`)
-        receivedProviderSet.add(game.Provider)
-        receivedGamesMap.set(`as:${game.GameCode}`, game)
+        receivedGamesSet.add(`as:${game.gameId}`)
+        receivedProviderSet.add('aspect')
+        receivedGamesMap.set(`as:${game.gameId}`, game)
       })
     })
 
@@ -103,7 +102,7 @@ async function main() {
             , additional_id = ?
           where uuid = ?
             and aggregator = 'aspect'
-      `, [game.GameType, id]))
+      `, [game.gameId, id]))
     })
 
     insertGameSet.forEach(id => {
@@ -113,10 +112,10 @@ async function main() {
       }
 
       promises.push(pool.query(`
-                  insert into casino.games (uuid, aggregator, provider_uid, provider, name, deleted, active, type, image,
+                  insert into casino.games (uuid, aggregator, provider_uid, provider, name, deleted, active, type,
                                             site_section, additional_id)
-                  values (concat('as:', ?), 'aspect', ?, ?, ?, 0, 0, ?, ?, ?, ?)
-        `, [game.GameCode, game.Provider, game.Provider, game.GameName, game.Category, game.ImageUrl, game.section, game.GameType]),
+                  values (concat('as:', ?), 'aspect', 'aspect', 'aspect', ?, 0, 0, 'slots', 'casino', ?)
+        `, [game.gameId, game.gameName, game.gameId]),
       )
     })
 
