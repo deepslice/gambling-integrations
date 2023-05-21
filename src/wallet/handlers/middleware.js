@@ -16,6 +16,8 @@ const pool = mysql2.createPool({
 })
 
 export async function middleware(req, res, next) {
+
+  console.log('---------------start middleware')
   const token = req.query.token
   const authorization = req.headers['authorization']
 
