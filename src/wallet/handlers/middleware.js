@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import mysql2 from 'mysql2/promise'
+import {getRedisClient} from '../../utils/redis.js'
 
 /**
  * @type {mysql2.Pool}
