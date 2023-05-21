@@ -49,9 +49,9 @@ export async function middleware(req, res, next) {
     const secretKey = project.configs.secretKey
     const operatorId = project.configs.operatorId
 
-    const secret = `${secretKey}` + `/` + `${req.originalUrl}`
+    const secret = `${secretKey}` + `/` + `${req.originalUrl.substring(4)}`
 
-    console.log('secret--------',secret)
+    console.log('secret--------', secret)
 
     const secretToken = crypto.createHash('md5').update(secret).digest('hex')
 
