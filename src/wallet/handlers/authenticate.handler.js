@@ -16,6 +16,7 @@ export async function authenticateHandler(req, res) {
       errorCode: 1002,
     }
     res.status(200).json(response).end()
+    console.error('data')
     return
   }
 

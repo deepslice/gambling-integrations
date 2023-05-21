@@ -28,6 +28,7 @@ export async function middleware(req, res, next) {
       errorCode: 1002,
     }
     res.status(200).json(response).end()
+    console.error('token--')
     return
   }
 
@@ -61,4 +62,5 @@ export async function middleware(req, res, next) {
   }
 
   res.status(200).json(response).end()
+  console.error('AUTH')
 }
