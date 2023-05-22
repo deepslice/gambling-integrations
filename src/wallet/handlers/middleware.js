@@ -63,7 +63,7 @@ export async function middleware(req, res, next) {
 
     console.log(secretToken)
 
-    if (`AUTH ${secretToken}` === authorization) {
+    if (`AUTH ${secretToken.toUpperCase()}` === authorization) {
       next()
       console.log('next-------')
       return
