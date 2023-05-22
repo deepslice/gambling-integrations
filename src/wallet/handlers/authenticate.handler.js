@@ -23,6 +23,8 @@ export async function authenticateHandler(req, res) {
       return
     }
 
+    await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
+
     const [[project]] = await pool.query(`
         select id                                  as id
              , prefix                              as prefix
