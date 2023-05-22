@@ -18,7 +18,6 @@ const pool = mysql2.createPool({
 
 export async function middleware(req, res, next) {
   try {
-    console.log('---------------start middleware')
     const token = req.query.token
     const authorization = req.headers['authorization']
 
@@ -51,8 +50,6 @@ export async function middleware(req, res, next) {
 
     const secret = `${secretKey}` + `${req.originalUrl.substring(4)}`
 
-    console.log('secret--------', secret)
-
     const secretToken = crypto.createHash('md5').update(secret).digest('hex')
 
     if (Number(operatorId) !== Number(req.query.operatorId)) {
@@ -65,7 +62,6 @@ export async function middleware(req, res, next) {
 
     if (`AUTH ${secretToken.toUpperCase()}` === authorization) {
       next()
-      console.log('next-------')
       return
     }
 
