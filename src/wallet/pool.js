@@ -44,11 +44,13 @@ export function getPool(prefix, config) {
 
 setInterval(() => {
   try {
-    console.error('#', getCurrentDatetime(), 'ASPECT MICROSERVICE POOL INFO', JSON.stringify([
-      pool.pool?._allConnections?.length,
-      pool.pool?._freeConnections?.length,
-      pool.pool?._connectionQueue?.length,
-    ]))
+    if (pool.pool?._allConnections?.length && !pool.pool?._freeConnections?.length) {
+      console.error('#', getCurrentDatetime(), 'ASPECT MICROSERVICE POOL INFO', JSON.stringify([
+        pool.pool?._allConnections?.length,
+        pool.pool?._freeConnections?.length,
+        pool.pool?._connectionQueue?.length,
+      ]))
+    }
   } catch (e) {
     console.error(e)
   }
