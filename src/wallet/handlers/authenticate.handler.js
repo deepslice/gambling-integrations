@@ -114,6 +114,7 @@ export async function authenticateHandler(req, res) {
     }
 
     res.status(200).json(response).end()
+    return
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
