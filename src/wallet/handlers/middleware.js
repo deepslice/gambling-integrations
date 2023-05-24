@@ -38,13 +38,14 @@ export async function middleware(req, res, next) {
     const prefix = data.prefix
 
     const [[project]] = await pool.query(`
-        select cast(configs as json) as configs
+        select json_extract(configs, '$.secretKey')  as secretKey
+             , json_extract(configs, '$.operatorId') as operatorId
         from casino.aspect_configs
         where prefix = ?
     `, [prefix])
 
-    const secretKey = project.configs.secretKey
-    const operatorId = project.configs.operatorId
+    const secretKey = project.secretKey
+    const operatorId = project.operatorId
 
     const secret = `${secretKey}` + `${req.originalUrl.substring(4)}`
 
