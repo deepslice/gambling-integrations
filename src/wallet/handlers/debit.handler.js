@@ -178,7 +178,7 @@ export async function debitHandler(req, res) {
         return
       }
 
-      const {insertId} = await trx.query(`
+      const [{insertId}] = await trx.query(`
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                            currency, session_id, bet_transaction_id, section)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
