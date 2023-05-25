@@ -178,6 +178,25 @@ export async function debitHandler(req, res) {
         return
       }
 
+      const currencyRate = await client.get(`currency`).then(JSON.parse)
+
+      const [[restrictions]] = await trx.query(`
+          select ggr * ? as ggr
+          from casino.restrictions
+          where code = ?
+      `, [currencyRate[user.currency] || 1, game.providerUid])
+
+      if (!restrictions || restrictions.ggr < user.balance) {
+        const response = {
+          error: 'Insufficient Funds',
+          errorCode: 1003,
+        }
+        res.status(200).json(response).end()
+        console.error('low ggr')
+        await trx.rollback()
+        return
+      }
+
       const [{insertId}] = await trx.query(`
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                            currency, session_id, bet_transaction_id, section)
@@ -190,6 +209,12 @@ export async function debitHandler(req, res) {
           set bet_limit = bet_limit - (?)
           where project_id = ?
       `, [amount, project.id])
+
+      await trx.query(`
+          update casino.restrictions
+          set ggr = ggr - (? / ?)
+          where code = ?
+      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
 
       await trx.query(`
           update users

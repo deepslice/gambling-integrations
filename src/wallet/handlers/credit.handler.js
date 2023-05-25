@@ -174,6 +174,14 @@ export async function creditHandler(req, res) {
       `, [amount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
         game.provider, game.uuid, user.currency, token, game.section])
 
+      const currencyRate = await client.get(`currency`).then(JSON.parse)
+
+      await trx.query(`
+          update casino.restrictions
+          set ggr = ggr + (? / ?)
+          where code = ?
+      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+
       const [[balanceLimit]] = await trx.query(`
           select value
           from global.configurations

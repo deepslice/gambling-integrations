@@ -172,6 +172,12 @@ export async function rollbackHandler(req, res) {
         }
         case 'BET': {
           await trx.query(`
+              update casino.restrictions
+              set ggr = ggr + (? / ?)
+              where code = ?
+          `, [transaction.amount, currencyRate[user.currency] || 1, game.providerUid])
+
+          await trx.query(`
               update users
               set balance = balance + ? * ?
               where id = ?
