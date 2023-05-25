@@ -140,7 +140,7 @@ export async function rollbackHandler(req, res) {
                                              currency, session_id, section)
             values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
         `, [0, 'as:', transactionId, user.id, 'ROLLBACK', 'aspect',
-          game.provider, game.uuid, project.currency, token, game.section])
+          game.provider, game.uuid, user.currency, token, game.section])
 
         const response = {
           success: true,

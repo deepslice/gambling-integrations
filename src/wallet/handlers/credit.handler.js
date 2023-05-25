@@ -172,7 +172,7 @@ export async function creditHandler(req, res) {
                                            currency, session_id, section)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
       `, [amount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
-        game.provider, game.uuid, project.currency, token, game.section])
+        game.provider, game.uuid, user.currency, token, game.section])
 
       const [[balanceLimit]] = await trx.query(`
           select value
