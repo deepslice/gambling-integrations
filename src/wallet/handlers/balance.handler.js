@@ -110,7 +110,7 @@ export async function getBalanceHandler(req, res) {
             where id = ?
         `, [rate, rate, user.id])
 
-        if (bonus && !bonus.value['live-casino']) {
+        if (bonus && !bonus.value[game.section]) {
           userBalance.balance = userBalance.realBalance
         }
 

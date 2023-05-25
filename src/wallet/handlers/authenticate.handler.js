@@ -2,6 +2,7 @@ import {getRedisClient} from '../../utils/redis.js'
 import {getPool, pool} from '../pool.js'
 import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {fixNumber} from './constats.js'
+import mysql2 from 'mysql2/promise'
 
 export async function authenticateHandler(req, res) {
   try {
@@ -78,25 +79,6 @@ export async function authenticateHandler(req, res) {
       return
     }
 
-    const [[user]] = await wPool.query(`
-        select id                                  as id,
-               username                            as userName,
-               balance                             as balance,
-               greatest(0, (balance - plus_bonus)) as realBalance,
-               currency                            as currency
-        from users
-        where id = ?
-    `, [data.user.id])
-
-    if (!user) {
-      res.status(200).json({
-        error: 'Invalid Player',
-        errorCode: 1001,
-      }).end()
-      console.error('user not found')
-      return
-    }
-
     const [[bonus]] = await pool.query(`
         select cast(value as json) as value
         from global.configurations
@@ -104,19 +86,69 @@ export async function authenticateHandler(req, res) {
           and prefix = ?
     `, [data.prefix])
 
-    if (bonus && !bonus.value[game.section]) {
-      user.balance = user.realBalance
-    }
+    /** @type {mysql2.Connection} */
+    const trx = await mysql2.createConnection(project.config)
 
-    const response = {
-      authenticated: true,
-      username: user.userName,
-      currency: user.currency,
-      balance: fixNumber(user.balance),
-    }
+    try {
+      const [[user]] = await trx.query(`
+          select id                                  as id,
+                 username                            as userName,
+                 balance                             as balance,
+                 greatest(0, (balance - plus_bonus)) as realBalance,
+                 currency                            as currency
+          from users
+          where id = ?
+      `, [data.user.id])
 
-    res.status(200).json(response).end()
-    return
+      if (!user) {
+        res.status(200).json({
+          error: 'Invalid Player',
+          errorCode: 1001,
+        }).end()
+        console.error('user not found')
+        return
+      }
+
+      if (bonus && !bonus.value[game.section]) {
+        user.balance = user.realBalance
+      }
+
+
+      let rate = 1
+
+      if (user.currency === 'TOM') {
+        rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
+
+        const [[userBalance]] = await trx.query(`
+            select id                                      as id,
+                   balance / ?                             as balance,
+                   greatest(0, (balance - plus_bonus)) / ? as realBalance
+            from users
+            where id = ?
+        `, [rate, rate, user.id])
+
+        if (bonus && !bonus.value[game.section]) {
+          userBalance.balance = userBalance.realBalance
+        }
+
+        user.balance = userBalance.balance
+        user.currency = 'USD'
+      }
+
+      const response = {
+        authenticated: true,
+        username: user.userName,
+        currency: user.currency,
+        balance: fixNumber(user.balance),
+      }
+
+      res.status(200).json(response).end()
+      return
+    } catch (e) {
+      console.error(getCurrentDatetime(), e)
+    } finally {
+      await trx.end()
+    }
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
