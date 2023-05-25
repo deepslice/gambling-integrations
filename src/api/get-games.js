@@ -19,7 +19,7 @@ export async function getGames() {
       select cast(configs as json) as configs
       from casino.aspect_configs
       where prefix = ?
-  `, ['twb'])
+  `, ['fg'])
 
   const operatorId = project.configs.operatorId
 
