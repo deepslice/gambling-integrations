@@ -181,12 +181,13 @@ export async function debitHandler(req, res) {
       const currencyRate = await client.get(`currency`).then(JSON.parse)
 
       const [[restrictions]] = await trx.query(`
-          select ggr * ? as ggr
+          select ggr * ?                                   as ggr
+               , if(max_ggr is not null, max_ggr - ggr, 1) as difference
           from casino.restrictions
           where code = ?
       `, [currencyRate[user.currency] || 1, game.providerUid])
 
-      if (!restrictions || restrictions.ggr < user.balance) {
+      if (!restrictions || restrictions.ggr < amount || restrictions.difference <= 0) {
         const response = {
           error: 'Insufficient Funds',
           errorCode: 1003,
