@@ -47,7 +47,10 @@ export async function getBalanceHandler(req, res) {
     `, [data.prefix])
 
     /** @type {mysql2.Connection} */
-    const trx = await mysql2.createConnection(project.config)
+    const trx = await mysql2.createConnection({
+      ...project.config,
+      decimalNumbers: true
+    })
 
     try {
       const [[user]] = await trx.query(`
