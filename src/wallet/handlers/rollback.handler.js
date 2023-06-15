@@ -52,7 +52,7 @@ export async function rollbackHandler(req, res) {
     /** @type {mysql2.Connection} */
     const trx = await mysql2.createConnection({
       ...project.config,
-      decimalNumbers: true
+      decimalNumbers: true,
     })
 
     try {
@@ -174,6 +174,8 @@ export async function rollbackHandler(req, res) {
           return
         }
         case 'BET': {
+          const currencyRate = await client.get(`currency`).then(JSON.parse)
+
           await trx.query(`
               update casino.restrictions
               set ggr = ggr + (? / ?)
