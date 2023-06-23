@@ -135,14 +135,14 @@ export async function rollbackHandler(req, res) {
           select *
           from casino_transactions
           where transaction_id = concat(?, ?)
-      `, ['as:', transactionId])
+      `, [transactionId, ':BET'])
 
       if (!transaction) {
         await trx.query(`
             insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                              currency, session_id, section)
             values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [0, 'as:', transactionId, user.id, 'ROLLBACK', 'aspect',
+        `, [0, transactionId, ':BET', user.id, 'ROLLBACK', 'aspect',
           game.provider, game.uuid, user.currency, token, game.section])
 
         const response = {
