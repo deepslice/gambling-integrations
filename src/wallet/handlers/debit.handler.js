@@ -53,7 +53,7 @@ export async function debitHandler(req, res) {
     /** @type {mysql2.Connection} */
     const trx = await mysql2.createConnection({
       ...project.config,
-      decimalNumbers: true
+      decimalNumbers: true,
     })
 
     try {
@@ -62,11 +62,12 @@ export async function debitHandler(req, res) {
       let rate = 1
 
       const [[user]] = await trx.query(`
-          select id                                  as id,
-                 balance                             as balance,
-                 greatest(0, (balance - plus_bonus)) as realBalance,
-                 least(balance, plus_bonus)          as plusBonus,
-                 currency                            as currency
+          select id                                      as id,
+                 balance                                 as balance,
+                 greatest(0, (balance - plus_bonus))     as realBalance,
+                 least(balance, plus_bonus)              as plusBonus,
+                 currency                                as currency,
+                 json_extract(options, '$.transactions') as status
           from users
           where id = ?
             and active = 1
@@ -84,6 +85,20 @@ export async function debitHandler(req, res) {
         console.error('user not found')
         await trx.rollback()
         return
+      }
+
+      if (user.status) {
+        const status = user.status
+        if (!status.transactions) {
+          const response = {
+            error: 'Insufficient Funds',
+            errorCode: 1003,
+          }
+          res.status(200).json(response).end()
+          console.error('status')
+          await trx.rollback()
+          return
+        }
       }
 
       const [[game]] = await trx.query(`
