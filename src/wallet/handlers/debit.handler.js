@@ -89,7 +89,7 @@ export async function debitHandler(req, res) {
 
       if (user.status) {
         const status = user.status
-        if (!status.transactions) {
+        if (status.transactions || status.casino) {
           const response = {
             error: 'Insufficient Funds',
             errorCode: 1003,
