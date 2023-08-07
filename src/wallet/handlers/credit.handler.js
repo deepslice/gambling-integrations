@@ -161,11 +161,11 @@ export async function creditHandler(req, res) {
 
       if (!checkBet) {
         const response = {
-          error: 'Could Not Rollback After Credit',
+          error: 'Could Not Credit After Debit',
           errorCode: 1024,
         }
         res.status(200).json(response).end()
-        console.error('Could Not Rollback After Credit')
+        console.error('Could Not Credit After Debit')
         await trx.rollback()
         return
       }
