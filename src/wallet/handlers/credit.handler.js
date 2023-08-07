@@ -53,7 +53,7 @@ export async function creditHandler(req, res) {
     /** @type {mysql2.Connection} */
     const trx = await mysql2.createConnection({
       ...project.config,
-      decimalNumbers: true
+      decimalNumbers: true,
     })
 
     try {
@@ -172,10 +172,10 @@ export async function creditHandler(req, res) {
 
       const [{insertId}] = await trx.query(`
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                           currency, session_id, section)
-          values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?)
+                                           currency, session_id, section, bet_transaction_id, round_id)
+          values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?)
       `, [amount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
-        game.provider, game.uuid, user.currency, token, game.section])
+        game.provider, game.uuid, user.currency, token, game.section, transactionId, ':BET', transactionId])
 
       const currencyRate = await client.get(`currency`).then(JSON.parse)
 

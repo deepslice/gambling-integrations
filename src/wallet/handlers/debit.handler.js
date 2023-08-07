@@ -218,10 +218,10 @@ export async function debitHandler(req, res) {
 
       const [{insertId}] = await trx.query(`
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                           currency, session_id, bet_transaction_id, section)
+                                           currency, session_id, section, round_id)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [amount, transactionId, ':BET', user.id, 'BET', 'aspect',
-        game.provider, game.uuid, user.currency, token, transactionId, game.section])
+        game.provider, game.uuid, user.currency, token, game.section, transactionId])
 
       await trx.query(`
           update casino.limits
