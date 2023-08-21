@@ -185,7 +185,7 @@ export async function debitHandler(req, res) {
           where project_id = ?
       `, [amount, project.id])
 
-      if (limit?.betLimit < 0) {
+      if (!limit || limit.betLimit < 0) {
         const response = {
           error: 'Insufficient Funds',
           errorCode: 1003,
