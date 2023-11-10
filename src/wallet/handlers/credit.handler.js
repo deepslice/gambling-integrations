@@ -179,7 +179,7 @@ export async function creditHandler(req, res) {
 
       const currencyRate = await client.get(`currency`).then(JSON.parse)
 
-      await trx.query(`
+      await pool.query(`
           update casino.restrictions
           set ggr = ggr + (? / ?)
           where code = ?

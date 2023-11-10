@@ -179,7 +179,7 @@ export async function debitHandler(req, res) {
         return
       }
 
-      const [[limit]] = await trx.query(`
+      const [[limit]] = await pool.query(`
           select (bet_limit - ?) as betLimit
           from casino.limits
           where project_id = ?
@@ -198,7 +198,7 @@ export async function debitHandler(req, res) {
 
       const currencyRate = await client.get(`currency`).then(JSON.parse)
 
-      const [[restrictions]] = await trx.query(`
+      const [[restrictions]] = await pool.query(`
           select ggr * ?                                   as ggr
                , if(max_ggr is not null, max_ggr - ggr, 1) as difference
           from casino.restrictions
@@ -223,13 +223,13 @@ export async function debitHandler(req, res) {
       `, [amount, transactionId, ':BET', user.id, 'BET', 'aspect',
         game.provider, game.uuid, user.currency, token, game.section, transactionId])
 
-      await trx.query(`
+      await pool.query(`
           update casino.limits
           set bet_limit = bet_limit - (?)
           where project_id = ?
       `, [amount, project.id])
 
-      await trx.query(`
+      await pool.query(`
           update casino.restrictions
           set ggr = ggr - (? / ?)
           where code = ?
