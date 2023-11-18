@@ -3,6 +3,7 @@ import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
+import {prSendData} from '../../utils/pr-amqp.js'
 
 export async function creditHandler(req, res) {
   const token = req.query.token
@@ -66,7 +67,11 @@ export async function creditHandler(req, res) {
                  balance                             as balance,
                  greatest(0, (balance - plus_bonus)) as realBalance,
                  least(balance, plus_bonus)          as plusBonus,
-                 currency                            as currency
+                 username                            as username,
+                 currency                            as currency,
+                 active                              as active,
+                 deleted                             as deleted,
+                 unix_timestamp(created_at)          as createdAt
           from users
           where id = ?
             and active = 1
@@ -267,6 +272,38 @@ export async function creditHandler(req, res) {
               values (?, 11, ?, ?, ?)
           `, [user.id, -drop, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
         }
+
+        const [[ct]] = await trx.query(`
+            select unix_timestamp(inserted_at)                                                    as updatedAt
+                 , unix_timestamp(date(inserted_at) - interval (dayofmonth(inserted_at) - 1) day) as month
+                 , amount                                                                         as amount
+            from casino_transactions
+            where id = ?
+        `, [insertId])
+
+        await prSendData(ct.month, {
+          id: user.id,
+          username: user.username,
+          currency: user.currency,
+          prefix: project.prefix,
+          month: ct.month,
+          createdAt: user.createdAt,
+          active: user.active,
+          deleted: user.deleted,
+        }, {
+          report: {
+            update: {
+              updatedAt: ct.updatedAt,
+              finalBalance: updatedBalance.historyBalanceAfterDrop,
+              finalBonus: updatedBalance.plusBonus,
+              ggrCasino: -ct.amount,
+              ggrTotal: -ct.amount,
+              dropAmount: drop ? drop : 0,
+              dropCount: drop ? 1 : 0,
+            },
+          },
+        })
+
       }
 
       if (bonus && !bonus.value[game.section]) {

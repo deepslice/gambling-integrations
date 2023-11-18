@@ -3,6 +3,7 @@ import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
+import {prSendData} from '../../utils/pr-amqp.js'
 
 export async function debitHandler(req, res) {
   const token = req.query.token
@@ -66,8 +67,12 @@ export async function debitHandler(req, res) {
                  balance                                 as balance,
                  greatest(0, (balance - plus_bonus))     as realBalance,
                  least(balance, plus_bonus)              as plusBonus,
+                 json_extract(options, '$.transactions') as status,
+                 username                                as username,
                  currency                                as currency,
-                 json_extract(options, '$.transactions') as status
+                 active                                  as active,
+                 deleted                                 as deleted,
+                 unix_timestamp(created_at)              as createdAt
           from users
           where id = ?
             and active = 1
@@ -278,6 +283,35 @@ export async function debitHandler(req, res) {
           insert into balance_history (user_id, type, amount, balance, info)
           values (?, 10, ? * ?, ?, ?)
       `, [user.id, -amount, rate, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
+
+      const [[ct]] = await trx.query(`
+          select unix_timestamp(inserted_at)                                                    as updatedAt
+               , unix_timestamp(date(inserted_at) - interval (dayofmonth(inserted_at) - 1) day) as month
+               , amount                                                                         as amount
+          from casino_transactions
+          where id = ?
+      `, [insertId])
+
+      await prSendData(ct.month, {
+        id: user.id,
+        username: user.username,
+        currency: user.currency,
+        prefix: project.prefix,
+        month: ct.month,
+        createdAt: user.createdAt,
+        active: user.active,
+        deleted: user.deleted,
+      }, {
+        report: {
+          update: {
+            updatedAt: ct.updatedAt,
+            finalBalance: updatedBalance.historyBalance,
+            finalBonus: updatedBalance.plusBonus,
+            ggrCasino: ct.amount,
+            ggrTotal: ct.amount,
+          },
+        },
+      })
 
       const response = {
         success: true,
