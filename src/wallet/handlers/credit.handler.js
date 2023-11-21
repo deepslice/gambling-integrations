@@ -273,31 +273,33 @@ export async function creditHandler(req, res) {
           `, [user.id, -drop, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
         }
 
-        const [[ct]] = await trx.query(`
+        const [[pr]] = await trx.query(`
             select unix_timestamp(inserted_at)                                                    as updatedAt
+                 , unix_timestamp(date(inserted_at))                                              as date
                  , unix_timestamp(date(inserted_at) - interval (dayofmonth(inserted_at) - 1) day) as month
                  , amount                                                                         as amount
             from casino_transactions
             where id = ?
         `, [insertId])
 
-        await prSendData(ct.month, {
+        await prSendData(pr.month, {
           id: user.id,
           username: user.username,
           currency: user.currency,
           prefix: project.prefix,
-          month: ct.month,
+          month: pr.month,
+          date: pr.date,
           createdAt: user.createdAt,
           active: user.active,
           deleted: user.deleted,
         }, {
           report: {
             update: {
-              updatedAt: ct.updatedAt,
+              updatedAt: pr.updatedAt,
               finalBalance: updatedBalance.historyBalanceAfterDrop,
               finalBonus: updatedBalance.plusBonus,
-              ggrCasino: -ct.amount,
-              ggrTotal: -ct.amount,
+              ggrCasino: -pr.amount,
+              ggrTotal: -pr.amount,
               dropAmount: drop ? drop : 0,
               dropCount: drop ? 1 : 0,
             },

@@ -1,4 +1,4 @@
-import {parseJSON} from './parseJSON.js'
+import {parseJSON} from './parse-json.js'
 import {getPrData} from './get-pr-data.js'
 import amqplib from 'amqplib'
 import {getCurrentDatetime} from './get-current-datetime.js'
@@ -27,8 +27,6 @@ export async function prSendData(month, user, data) {
       config.channel.publish(`pr-exchange`, uuid, buffer),
       new Promise(resolve => setTimeout(resolve, 1000, null)),
     ]).catch(err => console.error(getCurrentDatetime(), err))
-
-    console.error('RESULT Log: ', result)
 
     if (!result) {
       console.error(getCurrentDatetime(), 'data not sent', JSON.stringify(payload))
