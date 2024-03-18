@@ -3,7 +3,7 @@ import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
-import {prSendData} from '../../utils/pr-amqp.js'
+import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 
 export async function rollbackHandler(req, res) {
   const token = req.query.token
@@ -24,6 +24,7 @@ export async function rollbackHandler(req, res) {
     return
   }
 
+  const prefix = data.prefix
   await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 
   try {
@@ -236,6 +237,13 @@ export async function rollbackHandler(req, res) {
           values (?, 10, ? * ?, ?, ?)
       `, [user.id, transaction.action === 'BET' ? transaction.amount : -transaction.amount, rate, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
 
+      const [{insertId}] = await trx.query(`
+          insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
+                                           currency, session_id, section, round_id, change_balance)
+          values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `, [0, transactionId, ':rollback', user.id, 'ROLLBACK', 'aspect',
+        game.provider, game.uuid, user.currency, token, game.section, transactionId])
+
       const [[pr]] = await trx.query(`
           select unix_timestamp(inserted_at)                                                    as updatedAt
                , unix_timestamp(date(inserted_at))                                              as date
@@ -267,6 +275,7 @@ export async function rollbackHandler(req, res) {
           },
         },
       })
+      await sfSendData(prefix, insertId, `aspect`, pr.amount, pr.month)
 
       if (bonus && !bonus.value[game.section]) {
         updatedBalance.balance = updatedBalance.realBalance

@@ -10,7 +10,7 @@ export const logger = async (req, res, next) => {
   } ${
     (req.header('host') || '').padStart(25, ' ')
   } ${
-    req.url
+    req.path
   } ${
     JSON.stringify(req.query)
   } ${

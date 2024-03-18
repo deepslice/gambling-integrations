@@ -3,7 +3,7 @@ import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
-import {prSendData} from '../../utils/pr-amqp.js'
+import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 
 export async function creditHandler(req, res) {
   const token = req.query.token
@@ -24,6 +24,8 @@ export async function creditHandler(req, res) {
     console.error('data')
     return
   }
+
+  const prefix = data.prefix
 
   await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 
@@ -306,6 +308,7 @@ export async function creditHandler(req, res) {
           },
         })
 
+        await sfSendData(prefix, insertId, `aspect`, -pr.amount, pr.month)
       }
 
       if (bonus && !bonus.value[game.section]) {
