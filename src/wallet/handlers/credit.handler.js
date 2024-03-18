@@ -233,8 +233,6 @@ export async function creditHandler(req, res) {
           where id = ?
       `, [drop, user.id])
 
-      console.error(JSON.stringify(updatedBalance))
-
       if (amount > 0) {
         const balanceHistory = {
           balanceBefore: user.realBalance,

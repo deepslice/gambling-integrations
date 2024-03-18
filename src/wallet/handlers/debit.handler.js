@@ -255,8 +255,6 @@ export async function debitHandler(req, res) {
           where id = ?
       `, [user.id])
 
-      console.error(JSON.stringify(updatedBalance))
-
       if (bonus && !bonus.value[game.section]) {
         updatedBalance.balance = updatedBalance.realBalance
       }
