@@ -2,10 +2,10 @@ import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
-import {fixNumber} from './constats.js'
 import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
+import {fixNumber} from '../handlers/constats.js'
 
-export async function creditHandler(req, res, next) {
+export async function creditHandler(req, res) {
   const token = req.query.token
   const amount = Number(req.query.amount)
   const transactionId = req.query.transactionKey
@@ -26,11 +26,6 @@ export async function creditHandler(req, res, next) {
   }
 
   const prefix = data.prefix
-
-  if (['gtb', 'twin', 'igpt'].includes(data.prefix)) {
-    next()
-    return
-  }
 
   await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 
@@ -197,6 +192,25 @@ export async function creditHandler(req, res, next) {
           where code = ?
       `, [amount, currencyRate[user.currency] || 1, game.providerUid])
 
+      const [[maxWin]] = await pool.query(`
+          select value as value
+          from global.configurations
+          where code = 'win_limit'
+            and prefix = ?
+      `, [prefix])
+
+      let winDrop = 0
+
+      if (maxWin) {
+        const [[limitDrop]] = await trx.query(`
+            select greatest(0, ((balance - plus_bonus + ? * ?) - ?)) as amount
+            from users
+            where id = ?
+        `, [amount, rate, Number(maxWin.value), user.id])
+
+        winDrop = limitDrop.amount
+      }
+
       const [[balanceLimit]] = await trx.query(`
           select value
           from global.configurations
@@ -211,7 +225,7 @@ export async function creditHandler(req, res, next) {
             select greatest(0, ((balance - plus_bonus + ? * ?) - ?)) as amount
             from users
             where id = ?
-        `, [amount, rate, Number(balanceLimit.value), user.id])
+        `, [winDrop ? Number(maxWin.value) : amount, rate, Number(balanceLimit.value), user.id])
 
         drop = limitDrop.amount
 
@@ -219,13 +233,21 @@ export async function creditHandler(req, res, next) {
             update users
             set balance = balance + least(greatest(0, (? + plus_bonus - balance)), (? * ?))
             where id = ?
-        `, [Number(balanceLimit.value), amount, rate, user.id])
+        `, [Number(balanceLimit.value), winDrop ? Number(maxWin.value) : amount, rate, user.id])
       } else {
-        await trx.query(`
-            update users
-            set balance = balance + (? * ?)
-            where id = ?
-        `, [amount, rate, user.id])
+        if (maxWin) {
+          await trx.query(`
+              update users
+              set balance = balance + least(greatest(0, (? + plus_bonus - balance)), (? * ?))
+              where id = ?
+          `, [Number(maxWin.value), amount, rate, user.id])
+        } else {
+          await trx.query(`
+              update users
+              set balance = balance + (? * ?)
+              where id = ?
+          `, [amount, rate, user.id])
+        }
       }
 
       const [[updatedBalance]] = await trx.query(`
@@ -233,15 +255,17 @@ export async function creditHandler(req, res, next) {
                  cast((greatest(0, (balance - plus_bonus)) / ${rate}) as float) as realBalance,
                  greatest(0, (balance - plus_bonus))                            as historyBalanceAfterDrop,
                  greatest(0, (balance - plus_bonus)) + ?                        as historyBalanceBeforeDrop,
+                 greatest(0, (balance - plus_bonus)) + ?                        as historyBalanceBeforeWinDrop,
+                 greatest(0, (balance - plus_bonus)) + ? + ?                    as historyBalanceBeforeDrops,
                  least(balance, plus_bonus)                                     as plusBonus
           from users
           where id = ?
-      `, [drop, user.id])
+      `, [drop, winDrop, user.id])
 
       if (amount > 0) {
         const balanceHistory = {
           balanceBefore: user.realBalance,
-          balanceAfter: updatedBalance.historyBalanceBeforeDrop,
+          balanceAfter: updatedBalance.historyBalanceBeforeDrops,
           bonusBefore: user.plusBonus,
           bonusAfter: updatedBalance.plusBonus,
         }
@@ -261,6 +285,22 @@ export async function creditHandler(req, res, next) {
             insert into balance_history (user_id, type, amount, balance, info)
             values (?, 10, ? * ?, ?, ?)
         `, [user.id, amount, rate, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
+
+        if (winDrop) {
+          const balanceHistory = {
+            balanceBefore: updatedBalance.historyBalanceBeforeWinDrop,
+            balanceAfter: updatedBalance.historyBalanceAfterDrop,
+            bonusBefore: updatedBalance.plusBonus,
+            bonusAfter: updatedBalance.plusBonus,
+          }
+
+          historyInfo.action = 'WIN_DROP'
+
+          await trx.query(`
+              insert into balance_history (user_id, type, amount, balance, info)
+              values (?, 13, ?, ?, ?)
+          `, [user.id, -drop, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
+        }
 
         if (drop) {
           const balanceHistory = {
