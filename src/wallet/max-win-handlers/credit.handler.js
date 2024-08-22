@@ -260,7 +260,7 @@ export async function creditHandler(req, res) {
                  least(balance, plus_bonus)                                     as plusBonus
           from users
           where id = ?
-      `, [drop, winDrop, user.id])
+      `, [drop, winDrop, drop, winDrop, user.id])
 
       if (amount > 0) {
         const balanceHistory = {
