@@ -238,7 +238,7 @@ export async function creditHandler(req, res) {
         if (maxWin) {
           await trx.query(`
               update users
-              set balance = balance + least(greatest(0, (? + plus_bonus - balance)), (? * ?))
+              set balance = balance + least(?, (? * ?))
               where id = ?
           `, [Number(maxWin.value), amount, rate, user.id])
         } else {
