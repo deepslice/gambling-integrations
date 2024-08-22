@@ -299,7 +299,7 @@ export async function creditHandler(req, res) {
           await trx.query(`
               insert into balance_history (user_id, type, amount, balance, info)
               values (?, 13, ?, ?, ?)
-          `, [user.id, -drop, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
+          `, [user.id, -winDrop, JSON.stringify(balanceHistory), JSON.stringify(historyInfo)])
         }
 
         if (drop) {
