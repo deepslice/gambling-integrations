@@ -203,7 +203,7 @@ export async function creditHandler(req, res) {
 
       if (maxWin) {
         const [[limitDrop]] = await trx.query(`
-            select greatest(0, ((balance - plus_bonus + ? * ?) - ?)) as amount
+            select greatest(0, ((? * ?) - ?)) as amount
             from users
             where id = ?
         `, [amount, rate, Number(maxWin.value), user.id])
