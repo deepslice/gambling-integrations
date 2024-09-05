@@ -2,10 +2,10 @@ import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {pool} from '../pool.js'
 import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
-import {fixNumber} from './constats.js'
+import {fixNumber} from '../handlers/constats.js'
 import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 
-export async function debitHandler(req, res, next) {
+export async function debitHandler(req, res) {
   const token = req.query.token
   const uuid = req.query.gameId
   const amount = Number(req.query.amount)
@@ -25,12 +25,6 @@ export async function debitHandler(req, res, next) {
     return
   }
   const prefix = data.prefix
-
-  if (['gtb'].includes(data.prefix)) {
-    next()
-    return
-  }
-
   await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 
   try {
@@ -227,6 +221,19 @@ export async function debitHandler(req, res, next) {
         return
       }
 
+      const betLimit = await getBetLimit(trx, prefix, game)
+
+      if (betLimit && betLimit < amount) {
+        const response = {
+          error: 'Insufficient Funds',
+          errorCode: 1003,
+        }
+        res.status(200).json(response).end()
+        console.error('Bet limit')
+        await trx.rollback()
+        return
+      }
+
       const [{insertId}] = await trx.query(`
           insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                            currency, session_id, section, round_id)
@@ -339,4 +346,45 @@ export async function debitHandler(req, res, next) {
     console.error(getCurrentDatetime(), e)
   }
   res.status(500).json({message: 'internal server error'}).end()
+}
+
+async function getBetLimit(trx, prefix, game) {
+  const uuid = game.uuid
+  const provider = game.provider
+  const section = game.section
+
+  const [[getGameLimit]] = await trx.query(`
+      select bet_limit as betLimit
+      from casino.game_limits
+      where prefix = ?
+        and uuid = ?
+  `, [prefix, uuid])
+
+  if (getGameLimit) {
+    return getGameLimit.betLimit
+  }
+
+  const [[getProviderLimit]] = await trx.query(`
+      select bet_limit as betLimit
+      from casino.provider_limits
+      where prefix = ?
+        and provider = ?
+  `, [prefix, provider])
+
+  if (getProviderLimit) {
+    return getProviderLimit.betLimit
+  }
+
+  const [[getSectionLimit]] = await trx.query(`
+      select bet_limit as betLimit
+      from casino.section_limits
+      where prefix = ?
+        and site_section = ?
+  `, [prefix, section])
+
+  if (getSectionLimit) {
+    return getSectionLimit.betLimit
+  }
+
+  return null
 }
