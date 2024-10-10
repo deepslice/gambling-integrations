@@ -26,7 +26,7 @@ export async function debitHandler(req, res, next) {
   }
   const prefix = data.prefix
 
-  if (['tor', 'sky', 'sku', 'rich', 'abu', 'hbu', 'mbt', 'mbu', 'igpt'].includes(prefix)) {
+  if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu'].includes(prefix)) {
     next()
     return
   }
