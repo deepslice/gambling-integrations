@@ -27,7 +27,7 @@ export async function creditHandler(req, res, next) {
 
   const prefix = data.prefix
 
-  if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu'].includes(prefix)) {
+  if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu', 'abyr'].includes(prefix)) {
     next()
     return
   }
