@@ -200,7 +200,7 @@ export async function rollbackHandler(req, res) {
           return
         }
         case 'BET': {
-          const [{insert: tx_id}] = await trx.query(`
+          await trx.query(`
               insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                                currency, session_id, section, round_id, freespin_id)
               values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -239,7 +239,6 @@ export async function rollbackHandler(req, res) {
                 insert into wagering_transactions (wagering_id, user_id, amount, balance_before, balance_after,
                                                    reference)
                 values (?, ?, ? * ?, ? * ?, ? * ?, concat('cas:', ?))
-#                 ToDo: transaction.id to tx_id?
             `, [wageringId, user.id, transaction.amount, rate, user.balance, rate, wageringFinal.balance, rate, transaction.id])
 
             await wbSendData(project.prefix, user.id, transactionId, wageringId)
