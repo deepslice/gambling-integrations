@@ -19,7 +19,7 @@ const pool = mysql2.createPool({
 
 export async function gameInitHandler(req, res) {
   try {
-    const {game, user, prefix} = req.body
+    const {game, user, prefix, wageringId} = req.body
     const gameId = game.split(':')[1]
 
     const [[project]] = await pool.query(`
@@ -39,7 +39,7 @@ export async function gameInitHandler(req, res) {
 
     const token = randomBytes(36).toString('hex')
 
-    await client.setEx(`aspect-initial-token:${token}`, 5 * 60, JSON.stringify({user, prefix}))
+    await client.setEx(`aspect-initial-token:${token}`, 5 * 60, JSON.stringify({user, prefix, wageringId}))
 
     const url = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`).then(resp => {
       return resp.config.url || null
