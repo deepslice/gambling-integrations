@@ -6,6 +6,7 @@ import {fixNumber} from '../handlers/constats.js'
 import {balanceHistory} from '../../utils/balance-history.js'
 import {winLimit} from '../../utils/win-limits.js'
 import {balanceLimit} from '../../utils/balance-limit.js'
+import {wbSendData} from '../../utils/wb-send-data.js'
 
 export async function creditHandler(req, res, next) {
   try {
@@ -26,7 +27,7 @@ export async function creditHandler(req, res, next) {
       }
 
       res.status(200).json(response).end()
-      console.error('data')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C1', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     }
 
@@ -51,19 +52,19 @@ export async function creditHandler(req, res, next) {
 
     if (!project) {
       res.status(500).end()
-      console.error('prefix error')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C2', req.path, JSON.stringify(req.body))
       return
     }
 
     const wPool = getPool(prefix, project.config)
 
     const [[game]] = await wPool.query(`
-        select g.uuid         as uuid,
-               g.provider     as provider,
-               g.aggregator   as aggregator,
-               g.site_section as section,
-               g.name         as name,
-               g.provider_uid as providerUid
+        select g.uuid         as uuid
+             , g.provider     as provider
+             , g.aggregator   as aggregator
+             , g.site_section as section
+             , g.name         as name
+             , g.provider_uid as providerUid
         from casino.games g
                  left join casino_games cg on g.uuid = cg.uuid
         where g.uuid = concat('as:', ?)
@@ -80,15 +81,15 @@ export async function creditHandler(req, res, next) {
       await trx.beginTransaction()
 
       const [[user]] = await trx.query(`
-          select id                         as id,
-                 balance                    as balance,
-                 balance                    as nativeBalance,
-                 real_balance               as realBalance,
-                 username                   as username,
-                 currency                   as currency,
-                 active                     as active,
-                 deleted                    as deleted,
-                 unix_timestamp(created_at) as createdAt
+          select id                         as id
+               , balance                    as balance
+               , balance                    as nativeBalance
+               , real_balance               as realBalance
+               , username                   as username
+               , currency                   as currency
+               , active                     as active
+               , deleted                    as deleted
+               , unix_timestamp(created_at) as createdAt
           from users
           where id = ? for
           update
@@ -100,9 +101,9 @@ export async function creditHandler(req, res, next) {
           errorCode: 1001,
         }
 
-        res.status(200).json(response).end()
-        console.error('user not found')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C3', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -113,27 +114,46 @@ export async function creditHandler(req, res, next) {
       `, [transactionId, ':WIN'])
 
       if (transaction) {
-        res.status(500).end()
-        console.error('already passed this transaction key')
         await trx.rollback()
+        res.status(500).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C4', req.path, JSON.stringify(req.body))
         return
       }
 
       if (!game) {
-        res.status(200).json({
+        const response = {
           error: 'Invalid Game ID',
           errorCode: 1008,
-        }).end()
+        }
 
-        console.error('game not found')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C5', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
       if (amount < 0) {
-        res.status(500).end()
-        console.error('amount')
         await trx.rollback()
+        res.status(500).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C6', req.path, JSON.stringify(req.body))
+        return
+      }
+
+      const [[checkBet]] = await trx.query(`
+          select id as id
+          from casino_transactions
+          where transaction_id = concat(?, ?)
+      `, [transactionId, ':BET'])
+
+      if (!checkBet) {
+        const response = {
+          error: 'Could Not Credit After Debit',
+          errorCode: 1024,
+        }
+
+        await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C7', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -143,8 +163,8 @@ export async function creditHandler(req, res, next) {
         rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
 
         const [[userBalance]] = await trx.query(`
-            select id          as id,
-                   balance / ? as balance
+            select id          as id
+                 , balance / ? as balance
             from users
             where id = ?
         `, [rate, user.id])
@@ -166,33 +186,18 @@ export async function creditHandler(req, res, next) {
         `, [rate, wageringId, user.id])
 
         if (!wBalance) {
-          await trx.rollback()
-          res.status(200).json({
+          const response = {
             error: 1008,
             errorCode: 'Invalid wagering Id',
-          }).end()
+          }
+
+          await trx.rollback()
+          res.status(200).json(response).end()
+          console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C8', req.path, JSON.stringify(req.body), JSON.stringify(response))
           return
         }
 
         user.balance = wBalance.balance
-      }
-
-      const [[checkBet]] = await trx.query(`
-          select id as id
-          from casino_transactions
-          where transaction_id = concat(?, ?)
-      `, [transactionId, ':BET'])
-
-      if (!checkBet) {
-        const response = {
-          error: 'Could Not Credit After Debit',
-          errorCode: 1024,
-        }
-
-        res.status(200).json(response).end()
-        console.error('Could Not Credit After Debit')
-        await trx.rollback()
-        return
       }
 
       const [{insertId: txId}] = await trx.query(`
@@ -204,8 +209,8 @@ export async function creditHandler(req, res, next) {
 
       await trx.query(`
           update casino_rounds
-          set status     = 1,
-              win_amount = ifnull(win_amount, 0) + ?
+          set status     = 1
+            , win_amount = ifnull(win_amount, 0) + ?
           where round_id = ?
       `, [amount, transactionId])
 
@@ -234,6 +239,8 @@ export async function creditHandler(req, res, next) {
             insert into wagering_transactions(wagering_id, user_id, amount, balance_before, balance_after, reference)
             values (?, ?, ? * ?, ? * ?, ? * ?, concat('cas:', ?))
         `, [wageringId, user.id, amount, rate, user.balance, rate, wageringFinal.balance, rate, txId])
+
+        await wbSendData(project.prefix, user.id, transactionId, wageringId)
 
         user.balance = wageringFinal.balance
       } else {
@@ -303,6 +310,7 @@ export async function creditHandler(req, res, next) {
 
       await trx.commit()
       res.status(200).json(response).end()
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'C9', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     } catch (e) {
       console.error(getCurrentDatetime(), e)
@@ -313,5 +321,6 @@ export async function creditHandler(req, res, next) {
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
-  res.status(500).json({message: 'internal server error'}).end()
+
+  res.status(500).json({message: 'Internal server error'}).end()
 }

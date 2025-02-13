@@ -24,8 +24,9 @@ export async function debitHandler(req, res, next) {
         error: 'Invalid Token',
         errorCode: 1002,
       }
+
       res.status(200).json(response).end()
-      console.error('data')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D1', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     }
 
@@ -50,21 +51,21 @@ export async function debitHandler(req, res, next) {
 
     if (!project) {
       res.status(500).end()
-      console.error('prefix error')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D2', req.path, JSON.stringify(req.body))
       return
     }
 
     const wPool = getPool(prefix, project.config)
 
     const [[game]] = await wPool.query(`
-        select g.uuid                      as uuid,
-               g.provider                  as provider,
-               g.aggregator                as aggregator,
-               g.site_section              as section,
-               g.name                      as name,
-               g.provider_uid              as providerUid,
-               ifnull(cg.active, g.active) as active,
-               deleted                     as deleted
+        select g.uuid                      as uuid
+             , g.provider                  as provider
+             , g.aggregator                as aggregator
+             , g.site_section              as section
+             , g.name                      as name
+             , g.provider_uid              as providerUid
+             , ifnull(cg.active, g.active) as active
+             , deleted                     as deleted
         from casino.games g
                  left join casino_games cg on g.uuid = cg.uuid
         where g.uuid = concat('as:', ?)
@@ -81,16 +82,16 @@ export async function debitHandler(req, res, next) {
       await trx.beginTransaction()
 
       const [[user]] = await trx.query(`
-          select id                                      as id,
-                 balance                                 as balance,
-                 balance                                 as nativeBalance,
-                 real_balance                            as realBalance,
-                 json_extract(options, '$.transactions') as status,
-                 username                                as username,
-                 currency                                as currency,
-                 active                                  as active,
-                 deleted                                 as deleted,
-                 unix_timestamp(created_at)              as createdAt
+          select id                                      as id
+               , balance                                 as balance
+               , balance                                 as nativeBalance
+               , real_balance                            as realBalance
+               , json_extract(options, '$.transactions') as status
+               , username                                as username
+               , currency                                as currency
+               , active                                  as active
+               , deleted                                 as deleted
+               , unix_timestamp(created_at)              as createdAt
           from users
           where id = ? for
           update
@@ -103,26 +104,28 @@ export async function debitHandler(req, res, next) {
       `, [transactionId, ':BET'])
 
       if (transaction) {
-        res.status(500).end()
-        console.error('already passed this transaction key')
         await trx.rollback()
+        res.status(500).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D3', req.path, JSON.stringify(req.body))
         return
       }
 
       if (amount < 0) {
-        res.status(500).end()
-        console.error('amount')
         await trx.rollback()
+        res.status(500).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D4', req.path, JSON.stringify(req.body))
         return
       }
 
       if (!game || !game.active || game.deleted) {
-        res.status(200).json({
+        const response = {
           error: 'Invalid Game ID',
           errorCode: 1008,
-        }).end()
-        console.error('game not found')
+        }
+
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D5', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -133,9 +136,10 @@ export async function debitHandler(req, res, next) {
           error: 'Invalid Player',
           errorCode: 1,
         }
-        res.status(200).json(response).end()
-        console.error('user not found')
+
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D6', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -146,9 +150,10 @@ export async function debitHandler(req, res, next) {
             error: 'Insufficient Funds',
             errorCode: 1003,
           }
-          res.status(200).json(response).end()
-          console.error('status')
+
           await trx.rollback()
+          res.status(200).json(response).end()
+          console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D7', req.path, JSON.stringify(req.body), JSON.stringify(response))
           return
         }
       }
@@ -159,8 +164,8 @@ export async function debitHandler(req, res, next) {
         rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
 
         const [[userBalance]] = await trx.query(`
-            select id          as id,
-                   balance / ? as balance
+            select id          as id
+                 , balance / ? as balance
             from users
             where id = ?
         `, [rate, user.id])
@@ -171,8 +176,8 @@ export async function debitHandler(req, res, next) {
 
       if (wageringId) {
         const [[wBalance]] = await trx.query(`
-            select id          as id,
-                   balance / ? as balance
+            select id          as id
+                 , balance / ? as balance
             from wagering_balance
             where id = ?
               and user_id = ?
@@ -182,11 +187,14 @@ export async function debitHandler(req, res, next) {
         `, [rate, wageringId, user.id])
 
         if (!wBalance) {
-          await trx.rollback()
-          res.status(500).json({
+          const response = {
             error: 'Invalid wagering Id',
             errorCode: 1008,
-          }).end()
+          }
+
+          await trx.rollback()
+          res.status(500).json(response).end()
+          console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D8', req.path, JSON.stringify(req.body), JSON.stringify(response))
           return
         }
 
@@ -199,9 +207,9 @@ export async function debitHandler(req, res, next) {
           errorCode: 1003,
         }
 
-        res.status(200).json(response).end()
-        console.error('insufficient founds')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D9', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -219,9 +227,10 @@ export async function debitHandler(req, res, next) {
           error: 'Insufficient Funds',
           errorCode: 1003,
         }
-        res.status(200).json(response).end()
-        console.error('low ggr')
+
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D10', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -237,9 +246,9 @@ export async function debitHandler(req, res, next) {
           errorCode: 1003,
         }
 
-        res.status(200).json(response).end()
-        console.error('low limit')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D11', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -251,9 +260,9 @@ export async function debitHandler(req, res, next) {
           errorCode: 1003,
         }
 
-        res.status(200).json(response).end()
-        console.error('low limit')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D12', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -305,9 +314,10 @@ export async function debitHandler(req, res, next) {
       } else {
         await trx.query(`
             update users
-                set balance = balance - ? * ?
+            set balance      = balance - ? * ?,
+                real_balance = real_balance - ? * ?
             where id = ?
-        `, [amount, rate, user.id])
+        `, [amount, rate, amount, rate, user.id])
 
         await balanceHistory(trx, user, -amount, rate, 10, {
           provider: game.provider,
@@ -360,15 +370,17 @@ export async function debitHandler(req, res, next) {
 
       await trx.commit()
       res.status(200).json(response).end()
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'D13', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     } catch (e) {
-      console.error(getCurrentDatetime(), e)
       await trx.rollback()
+      console.error(getCurrentDatetime(), e)
     } finally {
       await trx.end()
     }
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
-  res.status(500).json({message: 'internal server error'}).end()
+
+  res.status(500).json({message: 'Internal server error'}).end()
 }

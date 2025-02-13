@@ -25,7 +25,7 @@ export async function rollbackHandler(req, res) {
       }
 
       res.status(200).json(response).end()
-      console.error('data')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R1', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     }
 
@@ -43,19 +43,19 @@ export async function rollbackHandler(req, res) {
 
     if (!project) {
       res.status(500).end()
-      console.error('prefix error')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R2', req.path, JSON.stringify(req.body))
       return
     }
 
     const wPool = getPool(prefix, project.config)
 
     const [[game]] = await wPool.query(`
-        select g.uuid         as uuid,
-               g.provider     as provider,
-               g.aggregator   as aggregator,
-               g.site_section as section,
-               g.name         as name,
-               g.provider_uid as providerUid
+        select g.uuid         as uuid
+             , g.provider     as provider
+             , g.aggregator   as aggregator
+             , g.site_section as section
+             , g.name         as name
+             , g.provider_uid as providerUid
         from casino.games g
                  left join casino_games cg on g.uuid = cg.uuid
         where g.uuid = concat('as:', ?)
@@ -69,15 +69,15 @@ export async function rollbackHandler(req, res) {
       await trx.beginTransaction()
 
       const [[user]] = await trx.query(`
-          select id                         as id,
-                 balance                    as balance,
-                 balance                    as nativeBalance,
-                 real_balance               as realBalance,
-                 username                   as username,
-                 currency                   as currency,
-                 active                     as active,
-                 deleted                    as deleted,
-                 unix_timestamp(created_at) as createdAt
+          select id                         as id
+               , balance                    as balance
+               , balance                    as nativeBalance
+               , real_balance               as realBalance
+               , username                   as username
+               , currency                   as currency
+               , active                     as active
+               , deleted                    as deleted
+               , unix_timestamp(created_at) as createdAt
           from users
           where id = ? for
           update
@@ -89,27 +89,71 @@ export async function rollbackHandler(req, res) {
           errorCode: 1001,
         }
 
-        res.status(200).json(response).end()
-        console.error('user not found')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R3', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
       if (!game) {
-        res.status(200).json({
+        const response = {
           error: 'Invalid Game ID',
           errorCode: 1008,
-        }).end()
+        }
 
-        console.error('game not found')
         await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R4', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
+      let rate = 1
+
+      if (user.currency === 'TOM') {
+        rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
+
+        const [[userBalance]] = await trx.query(`
+            select id          as id
+                 , balance / ? as balance
+            from users
+            where id = ?
+        `, [rate, user.id])
+
+        user.balance = userBalance.balance
+        user.currency = 'USD'
+      }
+
+      if (wageringId) {
+        const [[wBalance]] = await trx.query(`
+            select id          as id
+                 , balance / ? as balance
+            from wagering_balance
+            where id = ?
+              and user_id = ?
+              and status = 1
+              and free_spin = 0
+              and (expires_at > now() or expires_at is null)
+        `, [rate, wageringId, user.id])
+
+        if (!wBalance) {
+          const response = {
+            error: 'Invalid wagering Id',
+            errorCode: 1008,
+          }
+
+          await trx.rollback()
+          res.status(200).json(response).end()
+          console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R6', req.path, JSON.stringify(req.body), JSON.stringify(response))
+          return
+        }
+
+        user.balance = wBalance.balance
+      }
+
       const [[transaction]] = await trx.query(`
-          select id     as id,
-                 amount as amount,
-                 action as action
+          select id     as id
+               , amount as amount
+               , action as action
           from casino_transactions
           where transaction_id = concat(?, ?)
       `, [transactionId, ':BET'])
@@ -135,48 +179,9 @@ export async function rollbackHandler(req, res) {
         }
 
         res.status(200).json(response).end()
+        console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R5', req.path, JSON.stringify(req.body), JSON.stringify(response))
         await trx.commit()
         return
-      }
-
-      let rate = 1
-
-      if (user.currency === 'TOM') {
-        rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
-
-        const [[userBalance]] = await trx.query(`
-            select id          as id,
-                   balance / ? as balance
-            from users
-            where id = ?
-        `, [rate, user.id])
-
-        user.balance = userBalance.balance
-        user.currency = 'USD'
-      }
-
-      if (wageringId) {
-        const [[wBalance]] = await trx.query(`
-            select id          as id
-                 , balance / ? as balance
-            from wagering_balance
-            where id = ?
-              and user_id = ?
-              and status = 1
-              and free_spin = 0
-              and (expires_at > now() or expires_at is null)
-        `, [rate, wageringId, user.id])
-
-        if (!wBalance) {
-          await trx.rollback()
-          res.status(200).json({
-            error: 'Invalid wagering Id',
-            errorCode: 1008,
-          }).end()
-          return
-        }
-
-        user.balance = wBalance.balance
       }
 
       switch (transaction.action) {
@@ -186,8 +191,9 @@ export async function rollbackHandler(req, res) {
             balance: user.balance,
           }
 
-          res.status(200).json(response).end()
           await trx.rollback()
+          res.status(200).json(response).end()
+          console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R7', req.path, JSON.stringify(req.body), JSON.stringify(response))
           return
         case 'WIN': {
           const response = {
@@ -195,8 +201,9 @@ export async function rollbackHandler(req, res) {
             errorCode: 1024,
           }
 
-          res.status(200).json(response).end()
           await trx.rollback()
+          res.status(200).json(response).end()
+          console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R8', req.path, JSON.stringify(req.body), JSON.stringify(response))
           return
         }
         case 'BET': {
@@ -209,8 +216,8 @@ export async function rollbackHandler(req, res) {
 
           await trx.query(`
               update casino_rounds
-              set bet_amount = greatest(bet_amount - ?, 0),
-                  status     = 1
+              set bet_amount = greatest(bet_amount - ?, 0)
+                , status     = 1
               where round_id = ?
           `, [transaction.amount, transactionId])
 
@@ -247,9 +254,10 @@ export async function rollbackHandler(req, res) {
           } else {
             await trx.query(`
                 update users
-                set balance = balance + ? * ?
+                set balance      = balance + ? * ?,
+                    real_balance = real_balance + ? * ?
                 where id = ?
-            `, [transaction.amount, rate, user.id])
+            `, [transaction.amount, rate, transaction.amount, rate, user.id])
 
             await balanceHistory(trx, user, transaction.amount, rate, 10, {
               provider: game.provider,
@@ -304,8 +312,6 @@ export async function rollbackHandler(req, res) {
       // })
       // await sfSendData(prefix, insertId, `aspect`, pr.amount, pr.month)
 
-      console.log('rollback aspect amount, body, Date', transaction.amount, Date.now())
-
       const response = {
         success: true,
         balance: fixNumber(user.balance),
@@ -313,6 +319,7 @@ export async function rollbackHandler(req, res) {
 
       await trx.commit()
       res.status(200).json(response).end()
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'R9', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     } catch (e) {
       console.error(getCurrentDatetime(), e)
@@ -323,5 +330,6 @@ export async function rollbackHandler(req, res) {
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
-  res.status(500).json({message: 'internal server error'}).end()
+
+  res.status(500).json({message: 'Internal server error'}).end()
 }

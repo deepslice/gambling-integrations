@@ -18,51 +18,55 @@ export async function authenticateHandler(req, res) {
         error: 'Invalid Token',
         errorCode: 1002,
       }
+
       res.status(200).json(response).end()
-      console.error('data')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A1', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     }
 
     await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 
     const [[project]] = await pool.query(`
-        select id                                      as id
-             , prefix                                  as prefix
-             , db_name                                 as db
-             , json_extract(configs, '$.currency    ') as currency
-             , json_extract(configs, '$.database')     as config
+        select id                                  as id
+             , prefix                              as prefix
+             , db_name                             as db
+             , json_extract(configs, '$.currency') as currency
+             , json_extract(configs, '$.database') as config
         from global.settings
         where prefix = ?
     `, [data.prefix])
 
     if (!project) {
       res.status(500).end()
-      console.error('prefix error')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A2', req.path, JSON.stringify(req.body))
       return
     }
 
     const wPool = getPool(project.prefix, project.config)
 
     const [[game]] = await wPool.query(`
-        select g.uuid         as uuid,
-               g.provider     as provider,
-               g.aggregator   as aggregator,
-               g.site_section as section,
-               g.name         as name,
-               g.provider_uid as providerUid
+        select g.uuid         as uuid
+             , g.provider     as provider
+             , g.aggregator   as aggregator
+             , g.site_section as section
+             , g.name         as name
+             , g.provider_uid as providerUid
         from casino.games g
                  left join casino_games cg on g.uuid = cg.uuid
         where g.uuid = concat('as:', ?)
           and ifnull(cg.active, g.active) = 1
+          and deleted = 0
           and aggregator = 'aspect'
     `, [uuid])
 
     if (!game) {
-      res.status(200).json({
+      const response = {
         error: 'Invalid Game ID',
         errorCode: 1008,
-      }).end()
-      console.error('game not found')
+      }
+
+      res.status(200).json(response).end()
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A3', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     }
 
@@ -74,78 +78,85 @@ export async function authenticateHandler(req, res) {
 
     if (operatorId !== config.configs.operatorId) {
       res.status(500).end()
-      console.error('authenticate operatorId')
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A4', req.path, JSON.stringify(req.body))
       return
     }
 
-      const [[user]] = await wPool.query(`
-          select id       as id,
-                 username as userName,
-                 balance  as balance,
-                 currency as currency
-          from users
-          where id = ?
-      `, [data.user.id])
+    const [[user]] = await wPool.query(`
+        select id       as id
+             , username as userName
+             , balance  as balance
+             , currency as currency
+        from users
+        where id = ?
+    `, [data.user.id])
 
-      if (!user) {
-        res.status(200).json({
-          error: 'Invalid Player',
-          errorCode: 1001,
-        }).end()
-        console.error('user not found')
-        return
-      }
-
-      let rate = 1
-
-      if (user.currency === 'TOM') {
-        rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
-
-        const [[userBalance]] = await wPool.query(`
-            select id          as id,
-                   balance / ? as balance
-            from users
-            where id = ?
-        `, [rate, user.id])
-
-        user.balance = userBalance.balance
-        user.currency = 'USD'
-      }
-
-      if (data.wageringId) {
-        const [[wBalance]] = await wPool.query(`
-            select balance / ? as balance
-            from wagering_balance
-            where id = ?
-              and user_id = ?
-              and status = 1
-              and (expires_at > now() or expires_at is null)
-        `, [rate, data.wageringId, user.id])
-
-        if (!wBalance) {
-          res.status(200).json({
-            error: 'Invalid Player',
-            errorCode: 1001,
-          }).end()
-          console.error('wagering Id not found')
-          return
-        }
-
-        user.balance = wBalance.balance
-      }
-
+    if (!user) {
       const response = {
-        authenticated: true,
-        username: user.userName,
-        currency: user.currency,
-        balance: fixNumber(user.balance),
+        error: 'Invalid Player',
+        errorCode: 1001,
       }
 
       res.status(200).json(response).end()
+      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A5', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
+    }
+
+    let rate = 1
+
+    if (user.currency === 'TOM') {
+      rate = await client.get(`exchange-rate:tom:to:usd:${project.prefix}`).then(Number)
+
+      const [[userBalance]] = await wPool.query(`
+          select id          as id
+               , balance / ? as balance
+          from users
+          where id = ?
+      `, [rate, user.id])
+
+      user.balance = userBalance.balance
+      user.currency = 'USD'
+    }
+
+    if (data.wageringId) {
+      const [[wBalance]] = await wPool.query(`
+          select id          as id
+               , balance / ? as balance
+          from wagering_balance
+          where id = ?
+            and user_id = ?
+            and status = 1
+            and free_spin = 0
+            and (expires_at > now() or expires_at is null)
+      `, [rate, data.wageringId, user.id])
+
+      if (!wBalance) {
+        const response = {
+          error: 'Invalid Player',
+          errorCode: 1001,
+        }
+
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A6', req.path, JSON.stringify(req.body), JSON.stringify(response))
+        return
+      }
+
+      user.balance = wBalance.balance
+    }
+
+    const response = {
+      authenticated: true,
+      username: user.userName,
+      currency: user.currency,
+      balance: fixNumber(user.balance),
+    }
+
+    res.status(200).json(response).end()
+    console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, 'A7', req.path, JSON.stringify(req.body), JSON.stringify(response))
+    return
   } catch (e) {
     console.error(getCurrentDatetime(), e)
   }
 
-  res.status(500).json({message: 'internal server error'}).end()
+  res.status(500).json({message: 'Internal server error'}).end()
 }
