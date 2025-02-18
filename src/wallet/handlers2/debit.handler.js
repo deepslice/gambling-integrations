@@ -271,7 +271,7 @@ export async function debitHandler(req, res, next) {
                                            currency, session_id, section, round_id, freespin_id)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [amount, transactionId, ':BET', user.id, 'BET', 'aspect',
-        game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId || null])
+        game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId ? wageringId : null])
 
       await trx.query(`
           insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,

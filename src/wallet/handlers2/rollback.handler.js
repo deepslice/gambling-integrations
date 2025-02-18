@@ -161,17 +161,17 @@ export async function rollbackHandler(req, res) {
       if (!transaction) {
         await trx.query(`
             insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                             currency, session_id, section, round_id)
-            values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                             currency, session_id, section, round_id, freespin_id)
+            values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [0, transactionId, ':BET', user.id, 'ROLLBACK', 'aspect',
-          game.provider, game.uuid, user.currency, token, game.section, transactionId])
+          game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId ? wageringId : null])
 
         await trx.query(`
             insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                             currency, session_id, section, round_id)
-            values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                             currency, session_id, section, round_id, freespin_id)
+            values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [0, transactionId, ':ROLLBACK', user.id, 'ROLLBACK', 'aspect',
-          game.provider, game.uuid, user.currency, token, game.section, transactionId])
+          game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId ? wageringId : null])
 
         const response = {
           success: true,
@@ -212,7 +212,7 @@ export async function rollbackHandler(req, res) {
                                                currency, session_id, section, round_id, freespin_id)
               values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `, [0, transactionId, ':rollback', user.id, 'ROLLBACK', 'aspect',
-            game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId || null])
+            game.provider, game.uuid, user.currency, token, game.section, transactionId, wageringId ? wageringId : null])
 
           await trx.query(`
               update casino_rounds

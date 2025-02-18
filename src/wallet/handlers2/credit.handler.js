@@ -205,7 +205,7 @@ export async function creditHandler(req, res, next) {
                                            currency, session_id, section, bet_transaction_id, round_id, freespin_id)
           values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)
       `, [amount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
-        game.provider, game.uuid, user.currency, token, game.section, transactionId, ':BET', transactionId, wageringId || null])
+        game.provider, game.uuid, user.currency, token, game.section, transactionId, ':BET', transactionId, wageringId ? wageringId : null])
 
       await trx.query(`
           update casino_rounds
