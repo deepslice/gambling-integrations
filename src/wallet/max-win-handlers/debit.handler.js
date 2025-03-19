@@ -107,12 +107,13 @@ export async function debitHandler(req, res) {
       }
 
       const [[game]] = await trx.query(`
-          select g.uuid         as uuid,
-                 g.provider     as provider,
-                 g.aggregator   as aggregator,
-                 g.site_section as section,
-                 g.name         as name,
-                 g.provider_uid as providerUid
+          select g.uuid          as uuid,
+                 g.provider      as provider,
+                 g.aggregator    as aggregator,
+                 g.site_section  as section,
+                 g.name          as name,
+                 g.provider_uid  as providerUid,
+                 g.final_game_id as finalGameId
           from casino.games g
                    left join casino_games cg on g.uuid = cg.uuid
           where g.uuid = concat('as:', ?)
@@ -349,16 +350,16 @@ export async function debitHandler(req, res) {
 }
 
 async function getBetLimit(trx, prefix, game) {
-  const uuid = game.uuid
+  const finalGameId = game.finalGameId
   const provider = game.provider
   const section = game.section
 
   const [[getGameLimit]] = await trx.query(`
       select bet_limit as betLimit
-      from casino.game_limits
+      from casino.final_game_limits
       where prefix = ?
-        and uuid = ?
-  `, [prefix, uuid])
+        and final_game_id = ?
+  `, [prefix, finalGameId])
 
   if (getGameLimit) {
     return getGameLimit.betLimit
