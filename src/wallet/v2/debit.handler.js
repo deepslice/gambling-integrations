@@ -205,7 +205,7 @@ export async function debitHandler(req, res) {
 
       const betLimit = await getBetLimit(pool, prefix, game)
 
-      if (betLimit < user.convertedAmount) {
+      if (betLimit && betLimit < user.convertedAmount) {
         const response = {
           error: 'Insufficient Funds',
           errorCode: 1003,
