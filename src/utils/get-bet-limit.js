@@ -3,7 +3,7 @@ export async function getBetLimit(pool, prefix, game) {
       select bet_limit as amount
       from casino.final_game_limits
       where prefix = ?
-        and uuid = ?
+        and final_game_id = ?
       union all
       select bet_limit as amount
       from casino.provider_limits
