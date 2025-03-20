@@ -21,7 +21,7 @@ export async function gameInitHandler(req, res, next) {
   try {
     const {game, user, prefix} = req.body
 
-    if (['twin'].includes(data.prefix)) {
+    if (['twin'].includes(prefix)) {
       next()
       return
     }

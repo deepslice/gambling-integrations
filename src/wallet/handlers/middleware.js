@@ -35,6 +35,11 @@ export async function middleware(req, res, next) {
       return
     }
 
+    if (['twin'].includes(data.prefix)) {
+      next()
+      return
+    }
+
     const prefix = data.prefix
 
     const [[project]] = await pool.query(`

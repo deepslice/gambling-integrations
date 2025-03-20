@@ -24,6 +24,12 @@ export async function debitHandler(req, res, next) {
     console.error('data')
     return
   }
+
+  if (['twin'].includes(data.prefix)) {
+    next()
+    return
+  }
+
   const prefix = data.prefix
 
   if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu', 'abyr', 'olv'].includes(prefix)) {

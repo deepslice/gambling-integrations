@@ -4,7 +4,7 @@ import {getRedisClient} from '../../utils/redis.js'
 import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
 
-export async function getBalanceHandler(req, res) {
+export async function getBalanceHandler(req, res, next) {
   const token = req.query.token
   const uuid = req.query.gameId
   const client = await getRedisClient()
@@ -17,6 +17,11 @@ export async function getBalanceHandler(req, res) {
       errorCode: 1002,
     }).end()
     console.error('data')
+    return
+  }
+
+  if (['twin'].includes(data.prefix)) {
+    next()
     return
   }
 

@@ -14,11 +14,11 @@ app.use(express.json())
 app.use(logger)
 
 
-app.get('/api/authenticate', handlers.middleware, handlers.authenticateHandler, v2.authenticateHandler)
-app.get('/api/balance', handlers.middleware, handlers.getBalanceHandler, v2.getBalanceHandler)
-app.post('/api/debit', handlers.middleware, handlers.debitHandler, v2.debitHandler, maxWin.debitHandler)
-app.post('/api/credit', handlers.middleware, handlers.creditHandler, v2.creditHandler, maxWin.creditHandler)
-app.post('/api/rollback', handlers.middleware, handlers.rollbackHandler, v2.rollbackHandler)
+app.get('/api/authenticate', handlers.middleware, handlers.authenticateHandler, v2.middleware, v2.authenticateHandler)
+app.get('/api/balance', handlers.middleware, handlers.getBalanceHandler, v2.middleware, v2.getBalanceHandler)
+app.post('/api/debit', handlers.middleware, handlers.debitHandler, maxWin.debitHandler, v2.middleware, v2.debitHandler)
+app.post('/api/credit', handlers.middleware, handlers.creditHandler, maxWin.creditHandler, v2.middleware, v2.creditHandler)
+app.post('/api/rollback', handlers.middleware, handlers.rollbackHandler, v2.middleware, v2.rollbackHandler)
 
 
 const server = http.createServer(app)

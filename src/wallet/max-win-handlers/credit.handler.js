@@ -5,7 +5,7 @@ import mysql2 from 'mysql2/promise'
 import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 import {fixNumber} from '../handlers/constats.js'
 
-export async function creditHandler(req, res) {
+export async function creditHandler(req, res, next) {
   const token = req.query.token
   const amount = Number(req.query.amount)
   const transactionId = req.query.transactionKey
@@ -22,6 +22,11 @@ export async function creditHandler(req, res) {
     }
     res.status(200).json(response).end()
     console.error('data')
+    return
+  }
+
+  if (['twin'].includes(data.prefix)) {
+    next()
     return
   }
 

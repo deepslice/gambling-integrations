@@ -4,7 +4,7 @@ import {getCurrentDatetime} from '../../utils/get-current-datetime.js'
 import {fixNumber} from './constats.js'
 import mysql2 from 'mysql2/promise'
 
-export async function authenticateHandler(req, res) {
+export async function authenticateHandler(req, res, next) {
   try {
     const token = req.query.token
     const uuid = req.query.gameId
@@ -21,6 +21,11 @@ export async function authenticateHandler(req, res) {
       }
       res.status(200).json(response).end()
       console.error('data')
+      return
+    }
+
+    if (['twin'].includes(data.prefix)) {
+      next()
       return
     }
 
