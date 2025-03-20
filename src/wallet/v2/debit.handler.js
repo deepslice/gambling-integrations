@@ -260,7 +260,7 @@ export async function debitHandler(req, res) {
 
       await trx.commit()
       res.status(200).json(response).end()
-      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
+      console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     } catch (e) {
       await trx.rollback()
