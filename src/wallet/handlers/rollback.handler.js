@@ -5,7 +5,7 @@ import mysql2 from 'mysql2/promise'
 import {fixNumber} from './constats.js'
 import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 
-export async function rollbackHandler(req, res) {
+export async function rollbackHandler(req, res, next) {
   const token = req.query.token
   const transactionId = req.query.transactionKey
   const uuid = req.query.gameId
@@ -21,6 +21,11 @@ export async function rollbackHandler(req, res) {
     }
     res.status(200).json(response).end()
     console.error('data')
+    return
+  }
+
+  if (['twin'].includes(data.prefix)) {
+    next()
     return
   }
 

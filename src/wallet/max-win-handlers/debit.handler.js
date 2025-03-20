@@ -5,7 +5,7 @@ import mysql2 from 'mysql2/promise'
 import {fixNumber} from '../handlers/constats.js'
 import {prSendData, sfSendData} from '../../utils/pr-amqp.js'
 
-export async function debitHandler(req, res) {
+export async function debitHandler(req, res, next) {
   const token = req.query.token
   const uuid = req.query.gameId
   const amount = Number(req.query.amount)
@@ -24,6 +24,12 @@ export async function debitHandler(req, res) {
     console.error('data')
     return
   }
+
+  if (['twin'].includes(data.prefix)) {
+    next()
+    return
+  }
+
   const prefix = data.prefix
   await client.setEx(`aspect-initial-token:${token}`, 30 * 60 * 60, JSON.stringify(data))
 

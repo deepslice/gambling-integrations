@@ -25,6 +25,11 @@ export async function creditHandler(req, res, next) {
     return
   }
 
+  if (['twin'].includes(data.prefix)) {
+    next()
+    return
+  }
+
   const prefix = data.prefix
 
   if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu', 'abyr', 'olv'].includes(prefix)) {
