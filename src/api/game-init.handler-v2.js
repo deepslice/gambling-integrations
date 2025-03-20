@@ -17,14 +17,9 @@ const pool = mysql2.createPool({
   decimalNumbers: true,
 })
 
-export async function gameInitHandler(req, res, next) {
+export async function gameInitHandlerV2(req, res) {
   try {
-    const {game, user, prefix} = req.body
-
-    if (['twin'].includes(data.prefix)) {
-      next()
-      return
-    }
+    const {game, user, prefix, wageringBalanceId} = req.body
 
     const gameId = game.split(':')[1]
 
@@ -45,7 +40,7 @@ export async function gameInitHandler(req, res, next) {
 
     const token = randomBytes(36).toString('hex')
 
-    await client.setEx(`aspect-initial-token:${token}`, 5 * 60, JSON.stringify({user, prefix}))
+    await client.setEx(`aspect-initial-token:${token}`, 5 * 60, JSON.stringify({user, prefix, wageringBalanceId}))
 
     const url = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`).then(resp => {
       return resp.config.url || null
