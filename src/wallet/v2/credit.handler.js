@@ -171,7 +171,7 @@ export async function creditHandler(req, res) {
           update casino_rounds
           set status     = 1
             , win_amount = ifnull(win_amount, 0) + ?
-          where round_id = ?
+          where round_id = concat('ca:', ?)
       `, [user.convertedAmount, transactionId])
 
       const currencyRate = await client.get(`currency`).then(JSON.parse)

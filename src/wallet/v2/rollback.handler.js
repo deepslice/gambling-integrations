@@ -174,7 +174,7 @@ export async function rollbackHandler(req, res) {
               update casino_rounds
               set bet_amount = greatest(bet_amount - ?, 0)
                 , status     = 1
-              where round_id = ?
+              where round_id = concat('ca:', ?)
           `, [transaction.amount, transactionId])
 
           await trx.query(`
