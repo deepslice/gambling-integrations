@@ -229,7 +229,7 @@ export async function debitHandler(req, res) {
             insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
                                                        provider, uuid, currency, currency_to, rate)
             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [txId, -amount, -user.convertedAmount, user.id, 'BET', 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
+        `, [txId, -amount, -user.convertedAmount, user.id, 1, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
       }
 
       await trx.query(`

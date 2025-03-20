@@ -163,7 +163,7 @@ export async function creditHandler(req, res) {
             insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
                                                        provider, uuid, currency, currency_to, rate)
             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [txId, amount, user.convertedAmount, user.id, 'WIN', 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
+        `, [txId, amount, user.convertedAmount, user.id, 2, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
 
       }
 
