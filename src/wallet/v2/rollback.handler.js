@@ -191,11 +191,11 @@ export async function rollbackHandler(req, res) {
 
           const currencyRate = await client.get(`currency`).then(JSON.parse)
 
-          await pool.query(`
-              update casino.restrictions
-              set ggr = ggr + ? / ? / ?
-              where code = ?
-          `, [transaction.amount, conversion.rate, currencyRate[user.currency] || 1, game.providerUid])
+          // await pool.query(`
+          //     update casino.restrictions
+          //     set ggr = ggr + ? / ? / ?
+          //     where code = ?
+          // `, [transaction.amount, conversion.rate, currencyRate[user.currency] || 1, game.providerUid])
 
           await updateUserBalanceV2(trx, txId, prefix, transaction.roundId, 'ROLLBACK', user, transaction.amount, game, conversion.rate, wageringBalanceId, 1)
           break

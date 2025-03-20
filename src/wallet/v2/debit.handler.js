@@ -9,7 +9,7 @@ import {convertCurrencyForUserV2} from '../../utils/convert-currency-for-user-v2
 import {handleWageringBalanceV2} from '../../utils/handle-wagering-balance-v2.js'
 import {updateUserBalanceV2} from '../../utils/update-user-balance-v2.js'
 
-export async function debitHandler(req, res, next) {
+export async function debitHandler(req, res) {
   try {
     const client = await getRedisClient()
 
@@ -19,11 +19,6 @@ export async function debitHandler(req, res, next) {
     const transactionId = req.query.transactionKey
 
     const {prefix, userInfo, wageringBalanceId, convertCurrency, project} = req
-
-    if (['tor', 'sky', 'sku', 'rich', 'mbt', 'mbu', 'abu', 'hbu', 'prd', 'pru', 'dlb', 'dlu', 'clb', 'clu', 'abyr', 'olv'].includes(prefix)) {
-      next()
-      return
-    }
 
     const wPool = getPool(prefix, project.config)
 
@@ -250,11 +245,11 @@ export async function debitHandler(req, res, next) {
           where project_id = ?
       `, [user.convertedAmount, project.id])
 
-      await pool.query(`
-          update casino.restrictions
-          set ggr = ggr - ? / ?
-          where code = ?
-      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+      // await pool.query(`
+      //     update casino.restrictions
+      //     set ggr = ggr - ? / ?
+      //     where code = ?
+      // `, [amount, currencyRate[user.currency] || 1, game.providerUid])
 
       await updateUserBalanceV2(trx, txId, prefix, transactionId, 'BET', user, -user.convertedAmount, game, conversion.rate, wageringBalanceId, 1)
 
