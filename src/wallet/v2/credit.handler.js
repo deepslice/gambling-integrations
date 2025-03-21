@@ -208,7 +208,7 @@ export async function creditHandler(req, res) {
 
       await trx.commit()
       res.status(200).json(response).end()
-      console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
+      console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
       return
     } catch (e) {
       console.error(getCurrentDatetime(), e)
