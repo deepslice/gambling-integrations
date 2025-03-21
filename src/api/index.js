@@ -9,7 +9,7 @@ const app = express()
 app.use(express.json())
 app.use(logger)
 
-app.post('/api/game-init', gameInitHandler, gameInitHandlerV2)
+app.post('/api/game-init', gameInitHandlerV2)
 
 const server = http.createServer(app)
 
