@@ -51,6 +51,7 @@ export async function debitHandler(req, res) {
                , real_balance                            as realBalance
                , json_extract(options, '$.transactions') as status
                , username                                as username
+               , agent_id                                as parentId
                , currency                                as currency
                , currency                                as nativeCurrency
                , active                                  as active
@@ -93,7 +94,7 @@ export async function debitHandler(req, res) {
         return
       }
 
-      const parentActive = user && user.active && !user.deleted && await checkParentRecursive(user.parentId)
+      const parentActive = user && user.active && !user.deleted && await checkParentRecursive(user.parentId, trx)
 
       if (!user || !parentActive) {
         const response = {
