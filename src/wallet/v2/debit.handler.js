@@ -238,7 +238,7 @@ export async function debitHandler(req, res) {
                                     currency, additional_info)
           values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
           on duplicate key update bet_amount = bet_amount + ?
-      `, [user.convertedAmount, transactionId, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({wageringBalanceId}) : null, user.nativeCurrency])
+      `, [user.convertedAmount, transactionId, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({wageringBalanceId}) : null, user.convertedAmount])
 
       await trx.query(`
           update casino.limits
