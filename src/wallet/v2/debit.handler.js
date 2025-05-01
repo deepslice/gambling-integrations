@@ -165,26 +165,26 @@ export async function debitHandler(req, res) {
         return
       }
 
-      // const currencyRate = await client.get(`currency`).then(JSON.parse)
-      //
-      // const [[restrictions]] = await pool.query(`
-      //     select ggr * ?                                   as ggr
-      //          , if(max_ggr is not null, max_ggr - ggr, 1) as difference
-      //     from casino.restrictions
-      //     where code = ?
-      // `, [currencyRate[user.currency] || 1, game.providerUid])
-      //
-      // if (!restrictions || restrictions.ggr < amount || restrictions.difference <= 0) {
-      //   const response = {
-      //     error: 'Insufficient Funds',
-      //     errorCode: 1003,
-      //   }
-      //
-      //   await trx.rollback()
-      //   res.status(200).json(response).end()
-      //   console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit9#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-      //   return
-      // }
+      const currencyRate = await client.get(`currency`).then(JSON.parse)
+
+      const [[restrictions]] = await pool.query(`
+          select ggr * ?                                   as ggr
+               , if(max_ggr is not null, max_ggr - ggr, 1) as difference
+          from casino.restrictions
+          where code = ?
+      `, [currencyRate[user.currency] || 1, game.providerUid])
+
+      if (!restrictions || restrictions.ggr < amount || restrictions.difference <= 0) {
+        const response = {
+          error: 'Insufficient Funds',
+          errorCode: 1003,
+        }
+
+        await trx.rollback()
+        res.status(200).json(response).end()
+        console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit9#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
+        return
+      }
 
       const [[limit]] = await pool.query(`
           select bet_limit as betLimit
@@ -246,11 +246,11 @@ export async function debitHandler(req, res) {
           where project_id = ?
       `, [user.convertedAmount, project.id])
 
-      // await pool.query(`
-      //     update casino.restrictions
-      //     set ggr = ggr - ? / ?
-      //     where code = ?
-      // `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+      await pool.query(`
+          update casino.restrictions
+          set ggr = ggr - ? / ?
+          where code = ?
+      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
 
       await updateUserBalanceV2(trx, txId, prefix, transactionId, 'BET', user, -user.convertedAmount, game, conversion.rate, wageringBalanceId, 1)
 

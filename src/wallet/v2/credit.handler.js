@@ -176,11 +176,11 @@ export async function creditHandler(req, res) {
 
       const currencyRate = await client.get(`currency`).then(JSON.parse)
 
-      // await pool.query(`
-      //     update casino.restrictions
-      //     set ggr = ggr + ? / ?
-      //     where code = ?
-      // `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+      await pool.query(`
+          update casino.restrictions
+          set ggr = ggr + ? / ?
+          where code = ?
+      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
 
       if (amount > 0) {
         await updateUserBalanceV2(trx, txId, prefix, transactionId, 'WIN', user, user.convertedAmount, game, conversion.rate, wageringBalanceId, 0)
