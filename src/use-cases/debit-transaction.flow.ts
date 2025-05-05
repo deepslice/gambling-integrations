@@ -110,32 +110,32 @@ WHERE code = ?`;
 
 // TODO: Move to Aspect/
 export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool) {
-    const connection = await connPool.getConnection();
+    const txn = await connPool.getConnection();
 
-    const [[game]] = await connection.query<GameInfo[]>(
+    const [[game]] = await txn.query<GameInfo[]>(
         getGameInfo, [dto.gameId]
     );
 
     try {
-        await connection.beginTransaction();
+        await txn.beginTransaction();
 
-        const [[user]] = await connection.query<UserInfo[]>(
+        const [[user]] = await txn.query<UserInfo[]>(
             getUserInfo, [dto.userId]
         );
 
-        const [[hasTransaction]] = await connection.query<RowDataPacket[]>(
+        const [[hasTransaction]] = await txn.query<RowDataPacket[]>(
             isTransactionExist, [dto.transactionKey, ':BET']
         );
 
         if (hasTransaction) {
-            await connection.rollback();
+            await txn.rollback();
             // res.status(500).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit1#####', req.path, JSON.stringify(req.body))
             return;
         }
 
         if (dto.amount < 0) {
-            await connection.rollback();
+            await txn.rollback();
             // res.status(500).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit2#####', req.path, JSON.stringify(req.body))
             return;
@@ -147,7 +147,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1008,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit3#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
@@ -161,7 +161,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1,
             }
 
-            await connection.rollback()
+            await txn.rollback()
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit4#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return
@@ -175,7 +175,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                     errorCode: 1003,
                 }
 
-                await connection.rollback();
+                await txn.rollback();
                 // res.status(200).json(response).end()
                 // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit5#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
                 return;
@@ -192,7 +192,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1008,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit6#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
@@ -206,7 +206,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1008,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit7#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
@@ -218,7 +218,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1003,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit8#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
@@ -241,7 +241,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1003,
             }
 
-            await connection.rollback()
+            await txn.rollback()
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit9#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return
@@ -262,7 +262,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1003,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit10#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
@@ -276,13 +276,13 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
                 errorCode: 1003,
             }
 
-            await connection.rollback();
+            await txn.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit11#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
             return;
         }
 
-        const [{ insertId: txId }] = await connection.query(`
+        const [{ insertId: txId }] = await txn.query(`
                   insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
                                                    currency, session_id, section, round_id, freespin_id)
                   values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -290,21 +290,21 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
         game.provider, game.uuid, user.nativeCurrency, dto.token, game.section, dto.transactionKey, wageringBalanceId ? wageringBalanceId : null])
 
         if (convertCurrency) {
-            await connection.query(`
+            await txn.query(`
                     insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
                                                                provider, uuid, currency, currency_to, rate)
                     values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [txId, -dto.amount, -user.convertedAmount, user.id, 1, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
         }
 
-        await connection.query(`
+        await txn.query(`
                   insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
                                             currency, additional_info)
                   values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
                   on duplicate key update bet_amount = bet_amount + ?
               `, [user.convertedAmount, dto.transactionKey, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({ wageringBalanceId }) : null, user.convertedAmount])
 
-        await connection.query(`
+        await txn.query(`
                   update casino.limits
                   set bet_limit = bet_limit - ?
                   where project_id = ?
@@ -324,15 +324,15 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
             balance: fixNumber(user.balance),
         }
 
-        await connection.commit();
+        await txn.commit();
         // res.status(200).json(response).end()
         // console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return;
     } catch (error) {
         // console.error(getCurrentDatetime(), e)
-        await connection.rollback();
+        await txn.rollback();
     } finally {
-        // TODO: or connection.end() ?
-        connection.release();
+        // TODO: or txn.end() ?
+        txn.release();
     }
 }
