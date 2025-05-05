@@ -2,94 +2,130 @@
 
 import { Pool, RowDataPacket } from 'mysql2/promise'
 
-import { DebitRequestDto } from '@/providers/aspect/src/dto';
-
 import { IUserInfo } from '@/common/ifaces/user-info.iface';
 import { IGameInfo } from '@/common/ifaces/game-info.iface';
+import { DebitRequestDto } from '@/providers/aspect/src/dto';
 
 interface UserInfo extends IUserInfo, RowDataPacket { };
 interface GameInfo extends IGameInfo, RowDataPacket { };
 
-// TODO: (maybe)
-export class TransactionExecutor {
-    constructor(
-
-    ) { }
-}
-
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getUserInfo = `
-          select id                                      as id
-               , balance                                 as balance
-               , balance                                 as nativeBalance
-               , real_balance                            as realBalance
-               , json_extract(options, '$.transactions') as status
-               , username                                as username
-               , agent_id                                as parentId
-               , currency                                as currency
-               , currency                                as nativeCurrency
-               , active                                  as active
-               , deleted                                 as deleted
-               , unix_timestamp(created_at)              as createdAt
-          from users
-          where id = ? for
-          update`;
+SELECT id                                     AS id
+    , balance                                 AS balance
+    , balance                                 AS nativeBalance
+    , real_balance                            AS realBalance
+    , json_extract(options, '$.transactions') AS status
+    , username                                AS username
+    , agent_id                                AS parentId
+    , currency                                AS currency
+    , currency                                AS nativeCurrency
+    , active                                  AS active
+    , deleted                                 AS deleted
+    , unix_timestamp(created_at)              AS createdAt
+FROM users
+WHERE id = ? FOR
+UPDATE`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getGameInfo = `
-        select g.uuid                      as uuid
-             , g.provider                  as provider
-             , g.aggregator                as aggregator
-             , g.site_section              as section
-             , g.name                      as name
-             , g.provider_uid              as providerUid
-             , final_game_id               as finalGameId
-             , ifnull(cg.active, g.active) as active
-             , deleted                     as deleted
-        from casino.games g
-                 left join casino_games cg on g.uuid = cg.uuid
-        where g.uuid = concat('as:', ?)
-          and aggregator = 'aspect'`;
+SELECT g.uuid                     AS uuid
+    , g.provider                  AS provider
+    , g.aggregator                AS aggregator
+    , g.site_section              AS section
+    , g.name                      AS name
+    , g.provider_uid              AS providerUid
+    , final_game_id               AS finalGameId
+    , ifnull(cg.active, g.active) AS active
+    , deleted                     AS deleted
+FROM casino.games g
+LEFT JOIN casino_games cg ON g.uuid = cg.uuid
+WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const isTransactionExist = `
 SELECT id AS id
 FROM casino_transactions
 WHERE transaction_id = concat(?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const insertTransaction = `
-insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-    currency, session_id, section, round_id, freespin_id)
-values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+INSERT INTO casino_transactions 
+(
+    amount, 
+    transaction_id, 
+    player_id, 
+    action, 
+    aggregator, 
+    provider, 
+    game_id,
+    currency, 
+    session_id, 
+    section, 
+    round_id, 
+    freespin_id
+)
+VALUES (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const insertConvertedTransaction = `
-insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
-    provider, uuid, currency, currency_to, rate)
-values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+INSERT INTO casino_converted_transactions 
+(
+    id, 
+    amount, 
+    converted_amount, 
+    user_id, 
+    action, 
+    aggregator,
+    provider, 
+    uuid, 
+    currency, 
+    currency_to, 
+    rate
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const insertCasinoRounds = `
-insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
-    currency, additional_info)
-values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
-on duplicate key update bet_amount = bet_amount + ?`;
+INSERT INTO casino_rounds
+(
+    bet_amount, 
+    win_amount, 
+    round_id, 
+    user_id, 
+    aggregator, 
+    provider, 
+    uuid,
+    currency, 
+    additional_info
+)
+VALUES (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE bet_amount = bet_amount + ?`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getCasinoLimits = `
-select bet_limit as betLimit
-from casino.limits
-where project_id = ?`
+SELECT bet_limit AS betLimit
+FROM casino.limits
+WHERE project_id = ?`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getCasinoRestrictions = `
-select ggr * ? as ggr, 
-if(max_ggr is not null, max_ggr - ggr, 1) as difference
-from casino.restrictions
-where code = ?`
+SELECT ggr * ? AS ggr, 
+if(max_ggr IS NOT NULL, max_ggr - ggr, 1) AS difference
+FROM casino.restrictions
+WHERE code = ?`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const updateCasinoLimits = `
-update casino.limits
-set bet_limit = bet_limit - ?
-where project_id = ?`
+UPDATE casino.limits
+SET bet_limit = bet_limit - ?
+WHERE project_id = ?`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const updateCasinoRestrictions = `
-update casino.restrictions
-set ggr = ggr - ? / ?
-where code = ?`;
+UPDATE casino.restrictions
+SET ggr = ggr - ? / ?
+WHERE code = ?`;
 
 /**
  * debitTransactionFlow
