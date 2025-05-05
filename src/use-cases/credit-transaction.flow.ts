@@ -9,13 +9,6 @@ import { IGameInfo } from '@/common/ifaces/game-info.iface';
 interface UserInfo extends IUserInfo, RowDataPacket {};
 interface GameInfo extends IGameInfo, RowDataPacket {};
 
-// TODO: (maybe)
-export class TransactionExecutor {
-    constructor(
-
-    ) {}
-}
-
 const getUserInfo = `
 SELECT id                        AS id
     , balance                    AS balance
