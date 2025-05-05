@@ -1,4 +1,4 @@
-// balance/balance.controller.ts
+// wallet/wallet.controller.ts
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 
@@ -6,7 +6,7 @@ import { BalanceRequestDto } from '@/application/dto/balance/balance-request.dto
 import { BalanceService } from '@/application/services/balance.service';
 
 @Controller('api')
-export class BalanceController {
+export class WalletController {
   constructor(private readonly balanceService: BalanceService) {}
 
   /**

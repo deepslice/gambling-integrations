@@ -49,7 +49,7 @@ export class WalletStore {
         );
 
         if (!userBalance) {
-            throw ('User not found');
+            throw ('user not found');
         }
 
         return userBalance;
