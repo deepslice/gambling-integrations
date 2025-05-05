@@ -2,8 +2,10 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
 
 import { IUserInfo } from '@/common/ifaces/user-info.iface';
+import { IGameInfo } from '@/common/ifaces/game-info.iface';
 
 interface UserInfo extends IUserInfo, RowDataPacket {};
+interface GameInfo extends IGameInfo, RowDataPacket {};
 
 // TODO: (maybe)
 export class TransactionExecutor {
@@ -26,6 +28,63 @@ SELECT id                        AS id
 FROM users
 WHERE id = ? FOR UPDATE`;
 
+const sqlGetGameInfo = `
+SELECT g.uuid        AS uuid
+    , g.provider     AS provider
+    , g.aggregator   AS aggregator
+    , g.site_section AS section
+    , g.name         AS name
+    , g.provider_uid AS providerUid
+FROM casino.games g
+LEFT JOIN casino_games cg ON g.uuid = cg.uuid
+WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`;
+
+const sqlInsertTransaction = `
+INSERT INTO casino_transactions 
+(
+    amount, 
+    transaction_id, 
+    player_id, 
+    action, 
+    aggregator,
+    provider, 
+    game_id, 
+    currency, 
+    session_id, 
+    section, 
+    bet_transaction_id, 
+    round_id, 
+    freespin_id
+)
+VALUES (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)`;
+
+const sqlInsertConvertedTransaction = `
+INSERT INTO casino_converted_transactions 
+(
+    id, 
+    amount, 
+    converted_amount, 
+    user_id, 
+    action,
+    aggregator, 
+    provider, 
+    uuid, 
+    currency, 
+    currency_to, 
+    rate
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+const sqlUpdateCasinoRounds = `
+UPDATE casino_rounds
+SET status = 1, win_amount = ifnull(win_amount, 0) + ?
+WHERE round_id = concat('ca:', ?)`;
+
+const sqlUpdateCasinoRestrictions = `
+UPDATE casino.restrictions
+SET ggr = ggr + ? / ?
+WHERE code = ?`;
+
 /**
  * creditTransactionFlow
  * ...
@@ -34,11 +93,16 @@ WHERE id = ? FOR UPDATE`;
  */
 export async function creditTransactionFlow(connPool: Pool) {
     const connection = await connPool.getConnection();
+
+    const [ [ game ] ] = await connection.query<GameInfo[]>(
+        sqlGetGameInfo, [ uuid ]
+    );
+
     try {
         await connection.beginTransaction()
 
         const [ [ user ] ] = await connection.query<UserInfo[]>(
-            sqlGetUserInfo, [userInfo.id]
+            sqlGetUserInfo, [ userInfo.id ]
         )
 
         if (!user) {
@@ -133,38 +197,59 @@ export async function creditTransactionFlow(connPool: Pool) {
             return
         }
 
-        const [{ insertId: txId }] = await connection.query(`
-          insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                           currency, session_id, section, bet_transaction_id, round_id, freespin_id)
-          values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)
-      `, [user.convertedAmount, transactionId, ':WIN', user.id, 'WIN', 'aspect',
-        game.provider, game.uuid, user.nativeCurrency, token, game.section, transactionId, ':BET', transactionId, wageringBalanceId ? wageringBalanceId : null])
+        const [{ insertId: txId }] = await connection.query(
+            sqlInsertTransaction, 
+            [
+                user.convertedAmount, 
+                transactionId, 
+                ':WIN', 
+                user.id, 
+                'WIN', 
+                'aspect',
+                game.provider, 
+                game.uuid, 
+                user.nativeCurrency, 
+                token, 
+                game.section, 
+                transactionId, 
+                ':BET', 
+                transactionId, 
+                wageringBalanceId ? wageringBalanceId : null
+            ]
+        );
 
         if (convertCurrency) {
-            await connection.query(`
-            insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
-                                                       provider, uuid, currency, currency_to, rate)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [txId, amount, user.convertedAmount, user.id, 2, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
-
+            await connection.query(
+                sqlInsertConvertedTransaction, 
+                [
+                    txId, 
+                    amount, 
+                    user.convertedAmount, 
+                    user.id, 
+                    2, 
+                    'aspect', 
+                    game.provider, 
+                    game.uuid, 
+                    convertCurrency, 
+                    user.nativeCurrency, 
+                    conversion.rate
+                ]
+            );
         }
 
-        await connection.query(`
-          update casino_rounds
-          set status     = 1
-            , win_amount = ifnull(win_amount, 0) + ?
-          where round_id = concat('ca:', ?)
-      `, [user.convertedAmount, transactionId])
+        await connection.query(
+            sqlUpdateCasinoRounds, 
+            [user.convertedAmount, transactionId]
+        );
 
         // TODO: Redis
         const currencyRate = await client.get(`currency`).then(JSON.parse)
 
         // TODO: Здесь осознанно запрос из пула? Так он не в рамках транзакции!
-        await pool.query(`
-          update casino.restrictions
-          set ggr = ggr + ? / ?
-          where code = ?
-      `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+        await pool.query(
+            sqlUpdateCasinoRestrictions, 
+            [amount, currencyRate[user.currency] || 1, game.providerUid]
+        );
 
         if (amount > 0) {
             await updateUserBalanceV2(trx, txId, prefix, transactionId, 'WIN', user, user.convertedAmount, game, conversion.rate, wageringBalanceId, 0)
