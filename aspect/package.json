@@ -15,6 +15,7 @@
     "@nestjs/platform-express": "^11.1.0",
     "@types/node": "^22.15.3",
     "class-validator": "^0.14.2",
+    "ioredis": "^5.6.1",
     "mysql2": "^3.14.1",
     "redis": "^5.0.0",
     "reflect-metadata": "^0.2.2",
