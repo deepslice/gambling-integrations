@@ -20,6 +20,7 @@
         "paths": {
             "@/auth/*": ["auth/src/*"],
             "@/config/*": ["config/src/*"],
+            "@/common/*": ["common/*"],
             "@/wallet/*": ["wallet/src/*"],
             "@/providers/*": ["providers/*"],
             "@/infrastructure/*": ["infrastructure/*"]

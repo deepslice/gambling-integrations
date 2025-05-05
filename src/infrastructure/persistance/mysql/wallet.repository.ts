@@ -5,7 +5,7 @@ import type { Pool, RowDataPacket } from 'mysql2/promise';
 import { GetBalanceDto } from '@/wallet/dto/get-balance.dto';
 import { UpdateBalanceDto } from '@/wallet/dto/update-balance.dto';
 
-import { IUserInfo } from "common/ifaces/user-info.iface";
+import { IUserInfo } from '@/common/ifaces/user-info.iface';
 interface UserInfo extends IUserInfo, RowDataPacket {};
 
 const getBalanceQuery = `
