@@ -9,6 +9,7 @@ import { IGameInfo } from '@/common/ifaces/game-info.iface';
 interface UserInfo extends IUserInfo, RowDataPacket {};
 interface GameInfo extends IGameInfo, RowDataPacket {};
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getUserInfo = `
 SELECT id                        AS id
     , balance                    AS balance
@@ -23,6 +24,7 @@ SELECT id                        AS id
 FROM users
 WHERE id = ? FOR UPDATE`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const getGameInfo = `
 SELECT g.uuid        AS uuid
     , g.provider     AS provider
@@ -34,11 +36,13 @@ FROM casino.games g
 LEFT JOIN casino_games cg ON g.uuid = cg.uuid
 WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const isTransactionExist = `
 SELECT id AS id
 FROM casino_transactions
 WHERE transaction_id = concat(?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const insertTransaction = `
 INSERT INTO casino_transactions 
 (
@@ -58,6 +62,7 @@ INSERT INTO casino_transactions
 )
 VALUES (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const insertConvertedTransaction = `
 INSERT INTO casino_converted_transactions 
 (
@@ -75,11 +80,13 @@ INSERT INTO casino_converted_transactions
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const updateCasinoRounds = `
 UPDATE casino_rounds
 SET status = 1, win_amount = ifnull(win_amount, 0) + ?
 WHERE round_id = concat('ca:', ?)`;
 
+// TODO: Унести весь SQL в файлы .sql для линтинга, валидации и отдельного версионирования
 const updateCasinoRestrictions = `
 UPDATE casino.restrictions
 SET ggr = ggr + ? / ?
