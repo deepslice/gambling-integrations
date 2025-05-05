@@ -1,6 +1,8 @@
 // use-cases/credit-transaction.flow.ts
 import { Pool, RowDataPacket } from 'mysql2/promise'
 
+import { CreditRequestDto } from '@/providers/aspect/src/dto';
+
 import { IUserInfo } from '@/common/ifaces/user-info.iface';
 import { IGameInfo } from '@/common/ifaces/game-info.iface';
 
@@ -14,7 +16,7 @@ export class TransactionExecutor {
     ) {}
 }
 
-const sqlGetUserInfo = `
+const getUserInfo = `
 SELECT id                        AS id
     , balance                    AS balance
     , balance                    AS nativeBalance
@@ -28,7 +30,7 @@ SELECT id                        AS id
 FROM users
 WHERE id = ? FOR UPDATE`;
 
-const sqlGetGameInfo = `
+const getGameInfo = `
 SELECT g.uuid        AS uuid
     , g.provider     AS provider
     , g.aggregator   AS aggregator
@@ -39,7 +41,12 @@ FROM casino.games g
 LEFT JOIN casino_games cg ON g.uuid = cg.uuid
 WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`;
 
-const sqlInsertTransaction = `
+const isTransactionExist = `
+SELECT id AS id
+FROM casino_transactions
+WHERE transaction_id = concat(?, ?)`;
+
+const insertTransaction = `
 INSERT INTO casino_transactions 
 (
     amount, 
@@ -58,7 +65,7 @@ INSERT INTO casino_transactions
 )
 VALUES (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)`;
 
-const sqlInsertConvertedTransaction = `
+const insertConvertedTransaction = `
 INSERT INTO casino_converted_transactions 
 (
     id, 
@@ -75,12 +82,12 @@ INSERT INTO casino_converted_transactions
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-const sqlUpdateCasinoRounds = `
+const updateCasinoRounds = `
 UPDATE casino_rounds
 SET status = 1, win_amount = ifnull(win_amount, 0) + ?
 WHERE round_id = concat('ca:', ?)`;
 
-const sqlUpdateCasinoRestrictions = `
+const updateCasinoRestrictions = `
 UPDATE casino.restrictions
 SET ggr = ggr + ? / ?
 WHERE code = ?`;
@@ -91,19 +98,21 @@ WHERE code = ?`;
  * @param connPool 
  * @returns 
  */
-export async function creditTransactionFlow(connPool: Pool) {
+
+// TODO: Move to Aspect/
+export async function creditTransactionFlow(dto: CreditRequestDto, connPool: Pool) {
     const connection = await connPool.getConnection();
 
     const [ [ game ] ] = await connection.query<GameInfo[]>(
-        sqlGetGameInfo, [ uuid ]
+        getGameInfo, [ dto.gameId ]
     );
 
     try {
-        await connection.beginTransaction()
+        await connection.beginTransaction();
 
         const [ [ user ] ] = await connection.query<UserInfo[]>(
-            sqlGetUserInfo, [ userInfo.id ]
-        )
+            getUserInfo, [ dto.userId ]
+        );
 
         if (!user) {
             const response = {
@@ -111,23 +120,21 @@ export async function creditTransactionFlow(connPool: Pool) {
                 errorCode: 1001,
             }
 
-            await connection.rollback()
+            await connection.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit1#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-            return
+            return;
         }
 
-        const [ [ transaction ] ] = await connection.query(`
-          select id as id
-          from casino_transactions
-          where transaction_id = concat(?, ?)
-      `, [transactionId, ':WIN'])
+        const [ [ hasTransaction ] ] = await connection.query<RowDataPacket[]>(
+            isTransactionExist, [dto.transactionKey, ':WIN']
+        );
 
-        if (transaction) {
-            await connection.rollback()
+        if (hasTransaction) {
+            await connection.rollback();
             // res.status(500).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit2#####', req.path, JSON.stringify(req.body))
-            return
+            return;
         }
 
         if (!game) {
@@ -136,38 +143,36 @@ export async function creditTransactionFlow(connPool: Pool) {
                 errorCode: 1008,
             }
 
-            await connection.rollback()
+            await connection.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit3#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-            return
+            return;
         }
 
-        if (amount < 0) {
-            await connection.rollback()
+        if (dto.amount < 0) {
+            await connection.rollback();
             // res.status(500).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit4#####', req.path, JSON.stringify(req.body))
-            return
+            return;
         }
 
-        const [[checkBet]] = await connection.query(`
-          select id as id
-          from casino_transactions
-          where transaction_id = concat(?, ?)
-      `, [transactionId, ':BET'])
+        const [[ hasBet ]] = await connection.query<RowDataPacket[]>(
+            isTransactionExist, [dto.transactionKey, ':BET']
+        );
 
-        if (!checkBet) {
+        if (!hasBet) {
             const response = {
                 error: 'Could Not Credit After Debit',
                 errorCode: 1024,
             }
 
-            await connection.rollback()
+            await connection.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit5#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-            return
+            return;
         }
 
-        user.convertedAmount = amount
+        user.convertedAmount = dto.amount;
 
         const conversion = await convertCurrencyForUserV2(convertCurrency, wPool, prefix, client, user, 1)
 
@@ -177,10 +182,10 @@ export async function creditTransactionFlow(connPool: Pool) {
                 errorCode: 1008,
             }
 
-            await connection.rollback()
+            await connection.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit6#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-            return
+            return;
         }
 
         const isWageringBalanceValid = await handleWageringBalanceV2(wPool, wageringBalanceId, user, conversion.rate)
@@ -191,17 +196,17 @@ export async function creditTransactionFlow(connPool: Pool) {
                 errorCode: 1008,
             }
 
-            await connection.rollback()
+            await connection.rollback();
             // res.status(200).json(response).end()
             // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit7#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-            return
+            return;
         }
 
         const [{ insertId: txId }] = await connection.query(
-            sqlInsertTransaction, 
+            insertTransaction, 
             [
                 user.convertedAmount, 
-                transactionId, 
+                dto.transactionKey, 
                 ':WIN', 
                 user.id, 
                 'WIN', 
@@ -209,21 +214,21 @@ export async function creditTransactionFlow(connPool: Pool) {
                 game.provider, 
                 game.uuid, 
                 user.nativeCurrency, 
-                token, 
+                dto.token, 
                 game.section, 
-                transactionId, 
+                dto.transactionKey, 
                 ':BET', 
-                transactionId, 
+                dto.transactionKey, 
                 wageringBalanceId ? wageringBalanceId : null
             ]
         );
 
         if (convertCurrency) {
             await connection.query(
-                sqlInsertConvertedTransaction, 
+                insertConvertedTransaction, 
                 [
                     txId, 
-                    amount, 
+                    dto.amount, 
                     user.convertedAmount, 
                     user.id, 
                     2, 
@@ -238,20 +243,20 @@ export async function creditTransactionFlow(connPool: Pool) {
         }
 
         await connection.query(
-            sqlUpdateCasinoRounds, 
-            [user.convertedAmount, transactionId]
+            updateCasinoRounds, 
+            [user.convertedAmount, dto.transactionKey]
         );
 
         // TODO: Redis
-        const currencyRate = await client.get(`currency`).then(JSON.parse)
+        const currencyRate = await client.get(`currency`).then(JSON.parse);
 
         // TODO: Здесь осознанно запрос из пула? Так он не в рамках транзакции!
-        await pool.query(
-            sqlUpdateCasinoRestrictions, 
-            [amount, currencyRate[user.currency] || 1, game.providerUid]
+        await connPool.query(
+            updateCasinoRestrictions,
+            [dto.amount, currencyRate[user.currency] || 1, game.providerUid]
         );
 
-        if (amount > 0) {
+        if (dto.amount > 0) {
             await updateUserBalanceV2(trx, txId, prefix, transactionId, 'WIN', user, user.convertedAmount, game, conversion.rate, wageringBalanceId, 0)
 
             if (!wageringBalanceId) {
@@ -275,14 +280,14 @@ export async function creditTransactionFlow(connPool: Pool) {
             balance: fixNumber(user.balance),
         }
 
-        await connection.commit()
+        await connection.commit();
         // res.status(200).json(response).end()
         // console.log(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Credit(ok)#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-        return
+        return;
     } catch (error) {
         // console.error(getCurrentDatetime(), e)
-        await connection.rollback()
+        await connection.rollback();
     } finally {
-        await connection.end()
+        await connection.end();
     }
 }
