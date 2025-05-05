@@ -55,53 +55,44 @@ FROM casino_transactions
 WHERE transaction_id = concat(?, ?)`;
 
 const insertTransaction = `
-INSERT INTO casino_transactions 
-(
-    amount, 
-    transaction_id, 
-    player_id, 
-    action, 
-    aggregator,
-    provider, 
-    game_id, 
-    currency, 
-    session_id, 
-    section, 
-    bet_transaction_id, 
-    round_id, 
-    freespin_id
-)
-VALUES (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, concat(?, ?), ?, ?)`;
+insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
+    currency, session_id, section, round_id, freespin_id)
+values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 const insertConvertedTransaction = `
-INSERT INTO casino_converted_transactions 
-(
-    id, 
-    amount, 
-    converted_amount, 
-    user_id, 
-    action,
-    aggregator, 
-    provider, 
-    uuid, 
-    currency, 
-    currency_to, 
-    rate
-)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
+    provider, uuid, currency, currency_to, rate)
+values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-const updateCasinoRounds = `
-UPDATE casino_rounds
-SET status = 1, win_amount = ifnull(win_amount, 0) + ?
-WHERE round_id = concat('ca:', ?)`;
+const insertCasinoRounds = `
+insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
+    currency, additional_info)
+values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
+on duplicate key update bet_amount = bet_amount + ?`;
+
+const getCasinoLimits = `
+select bet_limit as betLimit
+from casino.limits
+where project_id = ?`
+
+const getCasinoRestrictions = `
+select ggr * ? as ggr, 
+if(max_ggr is not null, max_ggr - ggr, 1) as difference
+from casino.restrictions
+where code = ?`
+
+const updateCasinoLimits = `
+update casino.limits
+set bet_limit = bet_limit - ?
+where project_id = ?`
 
 const updateCasinoRestrictions = `
-UPDATE casino.restrictions
-SET ggr = ggr + ? / ?
-WHERE code = ?`;
+update casino.restrictions
+set ggr = ggr - ? / ?
+where code = ?`;
 
 /**
- * creditTransactionFlow
+ * debitTransactionFlow
  * ...
  * @param dto
  * @param connPool 
@@ -225,15 +216,13 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
         }
 
         // TODO: Redis
-        const currencyRate = await client.get(`currency`).then(JSON.parse)
+        const currencyRate = await client.get(`currency`).then(JSON.parse);
 
         // TODO: Здесь осознанно запрос из пула? Так он не в рамках транзакции!
-        const [[restrictions]] = await connPool.query(`
-                  select ggr * ?                                   as ggr
-                       , if(max_ggr is not null, max_ggr - ggr, 1) as difference
-                  from casino.restrictions
-                  where code = ?
-              `, [currencyRate[user.currency] || 1, game.providerUid])
+        const [[restrictions]] = await connPool.query(
+            getCasinoRestrictions, 
+            [currencyRate[user.currency] || 1, game.providerUid]
+        );
 
         if (!restrictions || restrictions.ggr < dto.amount || restrictions.difference <= 0) {
             const response = {
@@ -249,11 +238,7 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
 
         // TODO: Здесь осознанно запрос из пула? Так он не в рамках транзакции!
         const [[limit]] = await connPool.query(
-            `
-                  select bet_limit as betLimit
-                  from casino.limits
-                  where project_id = ?
-              `, [project.id]
+            getCasinoLimits, [project.id]
         );
 
         if (!limit || limit.betLimit < 0) {
@@ -282,40 +267,69 @@ export async function debitTransactionFlow(dto: DebitRequestDto, connPool: Pool)
             return;
         }
 
-        const [{ insertId: txId }] = await txn.query(`
-                  insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-                                                   currency, session_id, section, round_id, freespin_id)
-                  values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `, [user.convertedAmount, dto.transactionKey, ':BET', user.id, 'BET', 'aspect',
-        game.provider, game.uuid, user.nativeCurrency, dto.token, game.section, dto.transactionKey, wageringBalanceId ? wageringBalanceId : null])
+        const [{ insertId: txId }] = await txn.query(
+            insertTransaction, 
+            [
+                user.convertedAmount, 
+                dto.transactionKey, 
+                ':BET', 
+                user.id, 
+                'BET', 
+                'aspect',
+                game.provider, 
+                game.uuid, 
+                user.nativeCurrency, 
+                dto.token, 
+                game.section, 
+                dto.transactionKey, 
+                wageringBalanceId ? wageringBalanceId : null
+            ]
+        );
 
         if (convertCurrency) {
-            await txn.query(`
-                    insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
-                                                               provider, uuid, currency, currency_to, rate)
-                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `, [txId, -dto.amount, -user.convertedAmount, user.id, 1, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
+            await txn.query(
+                insertConvertedTransaction, 
+                [
+                    txId, 
+                    -dto.amount, 
+                    -user.convertedAmount, 
+                    user.id, 
+                    1, 
+                    'aspect', 
+                    game.provider, 
+                    game.uuid, 
+                    convertCurrency, 
+                    user.nativeCurrency, 
+                    conversion.rate
+                ]
+            );
         }
 
-        await txn.query(`
-                  insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
-                                            currency, additional_info)
-                  values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
-                  on duplicate key update bet_amount = bet_amount + ?
-              `, [user.convertedAmount, dto.transactionKey, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({ wageringBalanceId }) : null, user.convertedAmount])
+        await txn.query(
+            insertCasinoRounds, 
+            [
+                user.convertedAmount, 
+                dto.transactionKey, 
+                user.id, 
+                'caleta', 
+                game.provider, 
+                game.uuid, 
+                user.nativeCurrency, 
+                wageringBalanceId ? JSON.stringify({ wageringBalanceId }) : null, 
+                user.convertedAmount
+            ]
+        );
 
-        await txn.query(`
-                  update casino.limits
-                  set bet_limit = bet_limit - ?
-                  where project_id = ?
-              `, [user.convertedAmount, project.id])
+        await txn.query(
+            updateCasinoLimits, 
+            [user.convertedAmount, project.id]
+        );
 
         // TODO: Здесь осознанно запрос из пула? Так он не в рамках транзакции!
-        await connPool.query(`
-                  update casino.restrictions
-                  set ggr = ggr - ? / ?
-                  where code = ?
-              `, [dto.amount, currencyRate[user.currency] || 1, game.providerUid])
+        await connPool.query(
+            updateCasinoRestrictions, 
+            [dto.amount, currencyRate[user.currency] || 1, game.providerUid]
+        );
 
         await updateUserBalanceV2(trx, txId, prefix, transactionId, 'BET', user, -user.convertedAmount, game, conversion.rate, wageringBalanceId, 1);
 
