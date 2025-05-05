@@ -2,8 +2,8 @@
 import { Injectable } from '@nestjs/common';
 import { Pool, createPool } from 'mysql2/promise';
 
-import { ProviderConfig } from '@/interfaces/config-provider.interface';
-import { getProviderConfigQuery } from '@/constants/config-provider.constant';
+import { ProviderConfig } from '@/config/interfaces/config-provider.interface';
+import { getProviderConfigQuery } from '@/config/constants/config-provider.constant';
 
 @Injectable()
 export class ConfigProviderService {

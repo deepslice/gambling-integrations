@@ -2,7 +2,6 @@
 import { Injectable } from '@nestjs/common';
 
 import { WalletStore } from '@/infrastructure/persistance/mysql/wallet.repository'
-
 import { WithdrawFundsDto } from '@/wallet/dto/withdraw-funds.dto';
 import { DepositFundsDto } from '@/wallet/dto/deposit-funds.dto';
 import { GetBalanceDto } from '@/wallet/dto/get-balance.dto';

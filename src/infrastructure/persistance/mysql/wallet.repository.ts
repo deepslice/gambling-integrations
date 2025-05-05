@@ -1,21 +1,12 @@
 // mysql/wallet.repository.ts
 import { Injectable, Inject } from '@nestjs/common';
-import type { Pool } from 'mysql2/promise';
+import type { Pool, RowDataPacket } from 'mysql2/promise';
 
-import { WithdrawFundsDto } from '@/wallet/dto/withdraw-funds.dto';
-import { DepositFundsDto } from '@/wallet/dto/deposit-funds.dto';
 import { GetBalanceDto } from '@/wallet/dto/get-balance.dto';
+import { UpdateBalanceDto } from '@/wallet/dto/update-balance.dto';
 
-import {
-    TransactionReceipt,
-    WalletBalance
-} from '@/core/domain/entities/wallet.entity'
-
-interface IUpdateBalance {
-    userId: number
-    amount: number
-    isReal: boolean
-}
+import { IUserInfo } from "common/ifaces/user-info.iface";
+interface UserInfo extends IUserInfo, RowDataPacket {};
 
 const getBalanceQuery = `
     select id             as id,
@@ -41,10 +32,10 @@ export class WalletStore {
      * getBalance
      * 
      * @param dto
-     * @returns Promise<WalletBalance>
+     * @returns Promise<UserInfo>
      */
-    async getBalance(dto: GetBalanceDto): Promise<WalletBalance> {
-        const [[userBalance]] = await this.conn.query<WalletBalance[]>(
+    async getBalance(dto: GetBalanceDto): Promise<UserInfo> {
+        const [[userBalance]] = await this.conn.query<UserInfo[]>(
             getBalanceQuery, [dto.userId]
         );
 
@@ -61,7 +52,7 @@ export class WalletStore {
      * @param dto 
      * @returns Promise<WalletBalance>
      */
-    async depositFunds(dto: DepositFundsDto): Promise<void> {
+    async depositFunds(dto: UpdateBalanceDto): Promise<void> {
         await this.updateBalance(dto);
     }
 
@@ -71,7 +62,7 @@ export class WalletStore {
      * @param dto
      * @returns Promise<TransactionReceipt>
      */
-    async withdrawFunds(dto: WithdrawFundsDto): Promise<void> {
+    async withdrawFunds(dto: UpdateBalanceDto): Promise<void> {
         await this.updateBalance(dto);
     }
 
@@ -81,7 +72,7 @@ export class WalletStore {
      * @param dto 
      * @returns Promise<void>
      */
-    async updateBalance(dto: IUpdateBalance): Promise<void> {
+    async updateBalance(dto: UpdateBalanceDto): Promise<void> {
         await this.conn.query(
             updateBalanceQuery,
             [dto.amount, dto.isReal ? dto.amount : 0, dto.userId]

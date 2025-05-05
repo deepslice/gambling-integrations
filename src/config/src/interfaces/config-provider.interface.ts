@@ -1,6 +1,5 @@
 import { RowDataPacket } from 'mysql2/promise';
 
-
 export interface ProviderConfig extends RowDataPacket {
     id: number;
     prefix: number;
