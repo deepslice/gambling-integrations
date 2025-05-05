@@ -2,9 +2,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { WalletStore } from '@/infrastructure/persistance/mysql/wallet.repository'
-import { WithdrawFundsDto } from '@/wallet/dto/withdraw-funds.dto';
-import { DepositFundsDto } from '@/wallet/dto/deposit-funds.dto';
 import { GetBalanceDto } from '@/wallet/dto/get-balance.dto';
+import { UpdateBalanceDto } from '@/wallet/dto/update-balance.dto';
 
 @Injectable()
 export class WalletService {
@@ -26,7 +25,7 @@ export class WalletService {
      * 
      * @param dto 
      */
-    async depositFunds(dto: DepositFundsDto) {
+    async depositFunds(dto: UpdateBalanceDto) {
 
     }
 
@@ -35,7 +34,7 @@ export class WalletService {
      * 
      * @param dto 
      */
-    async withdrawFunds(dto: WithdrawFundsDto) {
+    async withdrawFunds(dto: UpdateBalanceDto) {
 
     }
 }
