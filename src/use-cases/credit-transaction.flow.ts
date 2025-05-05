@@ -95,6 +95,7 @@ WHERE code = ?`;
 /**
  * creditTransactionFlow
  * ...
+ * @param dto
  * @param connPool 
  * @returns 
  */
@@ -288,6 +289,7 @@ export async function creditTransactionFlow(dto: CreditRequestDto, connPool: Poo
         // console.error(getCurrentDatetime(), e)
         await connection.rollback();
     } finally {
-        await connection.end();
+        // TODO: or connection.end() ?
+        connection.release();
     }
 }
