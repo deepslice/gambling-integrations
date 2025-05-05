@@ -1,0 +1,5 @@
+aspect:
+
+pragmatic:
+
+provider-<name>:

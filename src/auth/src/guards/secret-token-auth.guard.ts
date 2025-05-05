@@ -3,7 +3,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { SecretTokenAuthService } from '@/auth/services/secret-token-auth.service';
 
 @Injectable()
-export class SecretKeyAuthGuard implements CanActivate {
+export class SecretTokenAuthGuard implements CanActivate {
   constructor(private readonly secretTokenAuthService: SecretTokenAuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

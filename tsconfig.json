@@ -20,7 +20,9 @@
         "paths": {
             "@/auth/*": ["auth/src/*"],
             "@/config/*": ["config/src/*"],
-            "@/provider/*": ["aspect/src/*"]
+            "@/wallet/*": ["wallet/src/*"],
+            "@/providers/*": ["providers/*"],
+            "@/infrastructure/*": ["infrastructure/*"]
         },
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true
