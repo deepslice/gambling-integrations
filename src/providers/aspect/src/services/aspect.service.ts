@@ -17,8 +17,10 @@ export class AspectService {
         this.walletService.getBalance
     }
 
+    @UseGuards(BetLimitGuard, RestrictionsGuard)
     async credit(dto: CreditRequestDto) { }
 
+    @UseGuards(BetLimitGuard, RestrictionsGuard)
     async debit(dto: DebitRequestDto) { }
 
     // TODO: ...
