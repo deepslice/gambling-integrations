@@ -1,6 +1,11 @@
-import { Redis } from 'ioredis';
+import { createClient } from 'redis'
 
-export const client = new Redis({
-    host: process.env.REDIS_HOST,
-    port: parseInt(process.env.REDIS_PORT),
-});
+const client = createClient()
+
+export async function getRedisClient() {
+  if (!client.isOpen) {
+    await client.connect()
+  }
+  
+  return client
+}
