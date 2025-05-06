@@ -1,6 +1,7 @@
 {
   "name": "game-operator",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/app/main.ts",
     "build": "tsc -p tsconfig.build.json",
