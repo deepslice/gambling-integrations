@@ -10,5 +10,5 @@ const dbConfig = {
   enableKeepAlive: true,
 }
 
-const dbConnection = createPool(dbConfig)
-export default dbConnection
+const db = createPool(dbConfig)
+export default db

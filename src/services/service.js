@@ -9,29 +9,7 @@ import {isGameActive} from '@/models/game/game.util.js'
 
 import {TransactionModel} from '@/models/transaction/transaction.model.js'
 
-export class AspectService {
-  // Проверка на существование активной игры
-  // static async hasGameActive(gameId) {
-  //     const [[game]] = await txn.query < GameInfo[] > (
-  //         getGameInfo, [dto.gameId]
-  //     );
-
-  //     return (game && game.active && !game.deleted)
-  // }
-
-  // static async hasValidUser(userId) {
-  //     const [[user]] = await txn.query(
-  //         getUserInfo, [dto.userId]
-  //     );
-
-  //     const isValid = (user && user.active && !user.deleted);
-  //     return this.hasUserActiveParents(user.parentId);
-  // }
-
-  // static async hasUserActiveParents(parentId) {
-  //     return await checkParentRecursive(user.parentId, trx);
-  // }
-
+export class GameService {
   /**
    * @param {string} userId
    * @param {string} gameId
@@ -48,23 +26,14 @@ export class AspectService {
 
     const txn = await dbConnection.getConnection()
 
-    // res.status(200).json(response).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit4#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-
     const user = UserModel.getUserInfo(userId)
     if (!isUserActive(user)) {
       throw new errors.InvalidPlayerError()
     }
 
-    // res.status(200).json(response).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit8#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-
     if (user.balance < amount) {
       throw new errors.InsufficientFundsError()
     }
-
-    // res.status(200).json(response).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit5#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
 
     const status = user.status
     if (status) {
@@ -73,16 +42,10 @@ export class AspectService {
       }
     }
 
-    // res.status(200).json(response).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit3#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-
     const game = GameModel.getGameInfo(gameId)
     if (!isGameActive(game)) {
       throw new errors.InvalidGameError()
     }
-
-    // res.status(500).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit1#####', req.path, JSON.stringify(req.body))
 
     const [{id: txId}] = await TransactionModel.getTransactionIdBet(transactionKey)
     if (txId) {
@@ -94,7 +57,6 @@ export class AspectService {
     try {
       await txn.beginTransaction()
 
-
       const conversion = await convertCurrencyForUserV2(convertCurrency, wPool, prefix, client, user, 1)
 
       if (!conversion.rate) {
@@ -104,8 +66,6 @@ export class AspectService {
         }
 
         await txn.rollback()
-        // res.status(200).json(response).end()
-        // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit6#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
         return
       }
 
@@ -118,9 +78,6 @@ export class AspectService {
         }
 
         await txn.rollback()
-        // res.status(200).json(response).end()
-        // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit7#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-
       }
 
     } catch (error) {
