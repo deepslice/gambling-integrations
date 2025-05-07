@@ -1,0 +1,15 @@
+-- +++ UP +++
+INSERT INTO `wagering_transactions` (`id`, `wagering_id`, `user_id`, `amount`, `balance_before`, `balance_after`,
+                                     `reference`, `status`, `created_at`, `updated_at`)
+VALUES (37, 205, 375, 629.4026, 937.0749, 152.8016, 'reference_81', 140, '2025-05-07 17:17:31.313557',
+        '2025-05-07 17:17:31.313575');
+INSERT INTO `wagering_transactions` (`id`, `wagering_id`, `user_id`, `amount`, `balance_before`, `balance_after`,
+                                     `reference`, `status`, `created_at`, `updated_at`)
+VALUES (200, 998, 907, 631.0738, 434.433, 777.1949, 'reference_27', 672, '2025-05-07 17:17:31.313615',
+        '2025-05-07 17:17:31.313622');
+INSERT INTO `wagering_transactions` (`id`, `wagering_id`, `user_id`, `amount`, `balance_before`, `balance_after`,
+                                     `reference`, `status`, `created_at`, `updated_at`)
+VALUES (937, 263, 870, 903.8858, 756.9747, 413.332, 'reference_98', 826, '2025-05-07 17:17:31.313670',
+        '2025-05-07 17:17:31.313677');
+
+-- +++ DOWN +++

@@ -1,18 +1,21 @@
 -- +++ UP +++
-create table wagering_transactions
+-- 17. wagering_transactions
+CREATE TABLE wagering_transactions
 (
-    id             bigint unsigned auto_increment
-        primary key,
-    wagering_id    bigint unsigned                            not null,
-    user_id        bigint unsigned                            not null,
-    amount         decimal(20, 4)                             not null,
-    balance_before decimal(20, 4)                             not null,
-    balance_after  decimal(20, 4)                             not null,
-    reference      varchar(128)                               not null,
-    status         tinyint unsigned default '0'               not null,
-    created_at     timestamp        default CURRENT_TIMESTAMP not null,
-    updated_at     timestamp        default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP
+    id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    wagering_id    BIGINT UNSIGNED                            NOT NULL,
+    user_id        BIGINT UNSIGNED                            NOT NULL,
+    amount         DECIMAL(20, 4)                             NOT NULL,
+    balance_before DECIMAL(20, 4)                             NOT NULL,
+    balance_after  DECIMAL(20, 4)                             NOT NULL,
+    reference      VARCHAR(128)                               NOT NULL,
+    status         TINYINT UNSIGNED DEFAULT 0                 NOT NULL,
+    created_at     TIMESTAMP        DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at     TIMESTAMP        DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (wagering_id) REFERENCES wagering_balance (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
-create index reference
-    on wagering_transactions (reference);
+CREATE INDEX reference ON wagering_transactions (reference);
+
+-- +++ DOWN +++

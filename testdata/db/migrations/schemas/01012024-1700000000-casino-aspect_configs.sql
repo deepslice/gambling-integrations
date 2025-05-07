@@ -1,7 +1,9 @@
 -- +++ UP +++
-create table aspect_configs
+-- 1. aspect_configs
+CREATE TABLE aspect_configs
 (
-    prefix  char(8) not null
-        primary key,
-    configs json    not null
+    prefix  CHAR(8) NOT NULL PRIMARY KEY,
+    configs JSON    NOT NULL
 );
+
+-- +++ DOWN +++

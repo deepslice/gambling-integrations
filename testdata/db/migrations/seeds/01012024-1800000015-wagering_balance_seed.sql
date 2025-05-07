@@ -1,0 +1,18 @@
+-- +++ UP +++
+INSERT INTO `wagering_balance` (`id`, `user_id`, `balance`, `initial_balance`, `rollovers`, `free_spin`, `type`,
+                                `template_id`, `params`, `status`, `priority`, `created_at`, `expires_at`, `updated_at`,
+                                `wagered`, `destination`, `payout`)
+VALUES (590, 7, 632.5373, 139.5905, 671.2201, 209, 181, 173, '{}', 114, 499, '2025-05-07 17:17:31.336945',
+        '2025-05-07 17:17:31.336988', '2025-05-07 17:17:31.336996', 680.3922, 494.1257, 174.1582);
+INSERT INTO `wagering_balance` (`id`, `user_id`, `balance`, `initial_balance`, `rollovers`, `free_spin`, `type`,
+                                `template_id`, `params`, `status`, `priority`, `created_at`, `expires_at`, `updated_at`,
+                                `wagered`, `destination`, `payout`)
+VALUES (484, 940, 88.0695, 527.8226, 440.4308, 205, 546, 805, '{}', 107, 789, '2025-05-07 17:17:31.337059',
+        '2025-05-07 17:17:31.337067', '2025-05-07 17:17:31.337073', 684.3187, 811.5709, 503.4485);
+INSERT INTO `wagering_balance` (`id`, `user_id`, `balance`, `initial_balance`, `rollovers`, `free_spin`, `type`,
+                                `template_id`, `params`, `status`, `priority`, `created_at`, `expires_at`, `updated_at`,
+                                `wagered`, `destination`, `payout`)
+VALUES (945, 726, 116.9727, 733.0151, 249.5627, 950, 377, 90, '{}', 506, 411, '2025-05-07 17:17:31.337132',
+        '2025-05-07 17:17:31.337139', '2025-05-07 17:17:31.337146', 906.6971, 422.9298, 983.6638);
+
+-- +++ DOWN +++

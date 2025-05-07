@@ -9,7 +9,9 @@ const __dirname = path.dirname(__filename)
 
 async function parseSqlFile(filepath) {
   const content = fs.readFileSync(filepath, 'utf-8')
+  console.log('content:', content)
   const upMatch = content.match(/--\s*\+{3}\s*UP\s*\+{3}\s*\n([\s\S]*?)--\s*\+{3}/i)
+  console.log('upMatch:', upMatch)
   const downMatch = content.match(/--\s*\+{3}\s*DOWN\s*\+{3}\s*\n([\s\S]*)/i)
 
   return {
@@ -50,14 +52,15 @@ async function main() {
   const [rows] = await connection.query('SELECT name FROM migrations')
   const applied = new Set(rows.map(row => row.name))
 
-  const migrationsDir = path.join(__dirname, '../__tests__/e2e/fixtures/db/migrations')
+  const migrationsDir = path.join(__dirname, '../testdata/db/migrations/seeds')
   const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
 
   if (command === 'up') {
     for (const file of files) {
       if (!applied.has(file)) {
         const {up} = await parseSqlFile(path.join(migrationsDir, file))
-        console.log(`Applying migration: ${file}`)
+        console.log(`Applying migration: ${path.join(migrationsDir, file)}`)
+        console.log('up:', up)
         await connection.query(up)
         await connection.query(`INSERT INTO migrations (name)
                                 VALUES (?)`, [file])

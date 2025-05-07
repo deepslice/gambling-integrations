@@ -1,8 +1,11 @@
 -- +++ UP +++
-create table casino_convert_settings
+-- 10. casino_convert_settings
+CREATE TABLE casino_convert_settings
 (
-    prefix     char(8)     not null,
-    aggregator varchar(32) not null,
-    provider   varchar(64) not null,
-    currency   char(5)     null
+    prefix     CHAR(8)     NOT NULL,
+    aggregator VARCHAR(32) NOT NULL,
+    provider   VARCHAR(64) NOT NULL,
+    currency   CHAR(5)
 );
+
+-- +++ DOWN +++

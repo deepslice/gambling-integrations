@@ -1,25 +1,27 @@
 -- +++ UP +++
-create table wagering_balance
+-- 16. wagering_balance
+CREATE TABLE wagering_balance
 (
-    id              bigint unsigned auto_increment
-        primary key,
-    user_id         bigint unsigned                        not null,
-    balance         decimal(20, 4)                         not null,
-    initial_balance decimal(20, 4)                         not null,
-    rollovers       decimal(12, 2)                         not null,
-    free_spin       tinyint      default 0                 not null,
-    type            int unsigned                           not null,
-    template_id     int unsigned                           null,
-    params          json                                   null,
-    status          int unsigned default '0'               not null,
-    priority        int unsigned                           null,
-    created_at      timestamp    default CURRENT_TIMESTAMP not null,
-    expires_at      timestamp                              null,
-    updated_at      timestamp    default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
-    wagered         decimal(20, 4)                         null,
-    destination     decimal(20, 4)                         null,
-    payout          decimal(20, 4)                         null
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT UNSIGNED                        NOT NULL,
+    balance         DECIMAL(20, 4)                         NOT NULL,
+    initial_balance DECIMAL(20, 4)                         NOT NULL,
+    rollovers       DECIMAL(12, 2)                         NOT NULL,
+    free_spin       TINYINT      DEFAULT 0                 NOT NULL,
+    type            INT UNSIGNED                           NOT NULL,
+    template_id     INT UNSIGNED,
+    params          JSON,
+    status          INT UNSIGNED DEFAULT 0                 NOT NULL,
+    priority        INT UNSIGNED,
+    created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at      TIMESTAMP,
+    updated_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+    wagered         DECIMAL(20, 4),
+    destination     DECIMAL(20, 4),
+    payout          DECIMAL(20, 4),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
-create index user_id
-    on wagering_balance (user_id);
+CREATE INDEX user_id ON wagering_balance (user_id);
+
+-- +++ DOWN +++
