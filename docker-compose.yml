@@ -37,8 +37,8 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     environment:
-      - PMA_HOST=mysql                 
-      - PMA_PORT=${DB_PORT} 
+      - PMA_HOST=mysql
+      - PMA_PORT=${DB_PORT}
     ports:
       - "8080:80"
     depends_on:
