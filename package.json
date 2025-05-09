@@ -6,7 +6,7 @@
     "dev": "tsx watch src/app/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/src/app/main.js",
-    "migrate": "node scripts/migrate.js",
+    "migrate": "node scripts/migrate.script.js",
     "lint": "eslint src",
     "test": "jest"
   },
