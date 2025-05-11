@@ -1,4 +1,4 @@
-import dbConnection from '@/infrastructure/db.connection.js'
+import dbConnection from '@/infrastructure/.deprecated/db.connection.js'
 
 const getGameInfo = `
     SELECT g.uuid       AS uuid

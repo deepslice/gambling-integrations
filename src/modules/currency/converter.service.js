@@ -1,5 +1,5 @@
-import db from '@/infrastructure/db.connection.js'
-import {getRedisClient} from '@/infrastructure/redis.connection.js'
+import db from '@/infrastructure/.deprecated/db.connection.js'
+import {getRedisClient} from '@/infrastructure/.deprecated/redis.connection.js'
 
 export class CurrencyConverterService {
   static async convert(currency, convertCurrency, amount, prefix) {

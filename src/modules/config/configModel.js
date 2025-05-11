@@ -1,6 +1,6 @@
 // @ts-check
 
-import dbConnection from '@/infrastructure/db.connection.js'
+import dbConnection from '@/infrastructure/.deprecated/db.connection.js'
 
 export const getProviderConfig = `
     select s.id                                               as id,

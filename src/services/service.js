@@ -1,15 +1,19 @@
-import dbConnection from '@/infrastructure/db.connection.js'
-import * as errors from '../utils/exceptions.util.js'
-
+import {AuthStore} from '@/modules/auth/auth.store.js'
 import {UserModel} from '@/models/user/user.model.js'
 import {isUserActive} from '@/models/user/user.util.js'
-
 import {GameModel} from '@/models/game/game.model.js'
 import {isGameActive} from '@/models/game/game.util.js'
-
 import {TransactionModel} from '@/models/transaction/transaction.model.js'
+import * as errors from '../utils/exceptions.util.js'
 
 export class GameService {
+  static async gameInit() {
+
+    const token = randomBytes(36).toString('hex')
+    AuthStore.setSessionToken()
+
+  }
+
   /**
    * @param {string} userId
    * @param {string} gameId
@@ -24,7 +28,7 @@ export class GameService {
       return
     }
 
-    const txn = await dbConnection.getConnection()
+    //const txn = await dbConnection.getConnection()
 
     const user = UserModel.getUserInfo(userId)
     if (!isUserActive(user)) {

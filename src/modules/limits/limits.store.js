@@ -1,6 +1,6 @@
 // @ts-check
 
-import dbConnection from '../../infrastructure/db.connection.js'
+import dbConnection from '../../infrastructure/.deprecated/db.connection.js'
 import {assertField} from '@/utils/assert.util.js'
 
 const getLimits = `

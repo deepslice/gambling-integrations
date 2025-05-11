@@ -1,4 +1,4 @@
-import dbConnection from '@/infrastructure/db.connection.js'
+import dbConnection from '@/infrastructure/.deprecated/db.connection.js'
 import * as errors from '../utils/exceptions.util.js'
 
 import {UserModel} from '@/models/user/user.model.js'
@@ -31,6 +31,10 @@ export class AspectService {
   // static async hasUserActiveParents(parentId) {
   //     return await checkParentRecursive(user.parentId, trx);
   // }
+
+  static async gameInit() {
+
+  }
 
   /**
    * @param {string} userId
