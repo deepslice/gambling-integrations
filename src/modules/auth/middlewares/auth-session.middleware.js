@@ -1,4 +1,4 @@
-import {AuthSessionService} from '@/modules/auth/auth-session.service.js'
+import {AuthSessionService} from '#app/modules/auth/auth-session.service'
 
 export const authenticateSession = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1] // AUTH <token>

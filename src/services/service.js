@@ -1,10 +1,10 @@
-import {AuthStore} from '@/modules/auth/auth.store.js'
-import {UserModel} from '@/models/user/user.model.js'
-import {isUserActive} from '@/models/user/user.util.js'
-import {GameModel} from '@/models/game/game.model.js'
-import {isGameActive} from '@/models/game/game.util.js'
-import {TransactionModel} from '@/models/transaction/transaction.model.js'
-import * as errors from '../utils/exceptions.util.js'
+import {AuthStore} from '#app/modules/auth/auth.store'
+import {UserModel} from '#app/models/user/user.model'
+import {isUserActive} from '#app/models/user/user.util'
+import {GameModel} from '#app/models/game/game.model'
+import {isGameActive} from '#app/models/game/game.util'
+import {TransactionModel} from '#app/models/transaction/transaction.model'
+import * as errors from '../utils/exceptions.util'
 
 export class GameService {
   static async gameInit() {

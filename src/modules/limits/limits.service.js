@@ -1,5 +1,5 @@
 // BetLimit/BetLimitService.js
-import {LimitStore} from './limits.store.js'
+import {LimitStore} from './limits.store'
 
 export class LimitChecker {
   static async checkBetLimits(userId, amount, provider) {

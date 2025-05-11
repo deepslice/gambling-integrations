@@ -1,7 +1,7 @@
 // @ts-check
 
-import dbConnection from '../../infrastructure/.deprecated/db.connection.js'
-import {assertField} from '@/utils/assert.util.js'
+import dbConnection from '../../infrastructure/.deprecated/db.connection'
+import {assertField} from '#app/utils/assert.util'
 
 const getLimits = `
     SELECT bet_limit AS betLimit

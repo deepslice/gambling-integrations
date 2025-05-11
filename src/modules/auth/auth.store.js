@@ -1,9 +1,9 @@
 // @ts-check
 
 import crypto from 'node:crypto'
-import redis from '@/infrastructure/cache'
-import {assertField} from '@/utils/assert.util.js'
-import {ConfigStore} from '@/modules/config/configModel'
+import redis from '#app/infrastructure/cache'
+import {assertField} from '#app/utils/assert.util'
+import {ConfigStore} from '#app/modules/config/configModel'
 
 export class AuthStore {
 

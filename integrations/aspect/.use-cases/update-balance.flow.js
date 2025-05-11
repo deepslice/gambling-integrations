@@ -1,5 +1,5 @@
-import {balanceHistoryV2} from './balance-history-v2.js'
-import {wbSendData} from './wb-send-data.js'
+import {balanceHistoryV2} from './balance-history-v2'
+import {wbSendData} from './wb-send-data'
 
 export async function updateUserBalanceV2(trx, trxId, prefix, round_id, action, user, amount, game, rate, wageringBalanceId, real) {
   if (wageringBalanceId) {

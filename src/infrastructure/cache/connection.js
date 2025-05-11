@@ -1,5 +1,5 @@
 import Redis from 'ioredis'
-import redisConfig from './config'
+import redisConfig from './config.js'
 
 class RedisConnection {
   constructor() {

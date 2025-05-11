@@ -2,10 +2,10 @@
 
 import {Pool, RowDataPacket} from 'mysql2/promise'
 
-import {CreditRequestDto} from '@/providers/aspect/src/dto'
+import {CreditRequestDto} from '#app/providers/aspect/src/dto'
 
-import {IUserInfo} from '@/common/ifaces/user-info.iface'
-import {IGameInfo} from '@/common/ifaces/game-info.iface'
+import {IUserInfo} from '#app/common/ifaces/user-info.iface'
+import {IGameInfo} from '#app/common/ifaces/game-info.iface'
 
 interface
 UserInfo

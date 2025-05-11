@@ -1,5 +1,5 @@
 // decorators/withBetLimitChecks.js
-import {BetLimitService} from '@/BetLimit/BetLimitService'
+import {BetLimitService} from '#app/BetLimit/BetLimitService'
 
 export function withLimitsChecks(handler) {
   return async (req, res, next) => {

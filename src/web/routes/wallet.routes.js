@@ -1,6 +1,6 @@
 import {Router} from 'express'
-import {WalletController} from '@/web/controllers/wallet.controller.js'
-import {authenticateSession} from '@/modules/auth/middlewares/auth-session.middleware.js'
+import {WalletController} from '#app/web/controllers/wallet.controller'
+import {authenticateSession} from '#app/modules/auth/middlewares/auth-session.middleware'
 
 const router = Router()
 

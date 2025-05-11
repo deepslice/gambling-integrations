@@ -1,10 +1,10 @@
 export default {
-  moduleFileExtensions: ['js', 'json', 'ts'],
+  moduleFileExtensions: ['js', 'mjs'],
   moduleNameMapper: {
-    '^@/(.*)': '<rootDir>/src/$1',
+    '^#app/(.*)': '<rootDir>/src/$1',
   },
   rootDir: './',
   testRegex: '.*\\.spec\\.js$',
-  transform: {},
   testEnvironment: 'node',
+  transform: {},
 }

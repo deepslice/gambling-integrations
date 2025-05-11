@@ -1,4 +1,4 @@
-import connection from './connection'
+import connection from './connection.js'
 
 class RedisClient {
   constructor() {
@@ -7,6 +7,8 @@ class RedisClient {
   }
 
   init() {
+    // TODO: Refactor it
+    connection.connect()
     connection.onConnect(() => {
       this.initialized = true
       console.log('Redis client ready')

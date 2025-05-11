@@ -1,5 +1,5 @@
-import connection from './connection'
-import client from './client'
+import connection from './connection.js'
+import client from './client.js'
 
 export default {
   connection,
