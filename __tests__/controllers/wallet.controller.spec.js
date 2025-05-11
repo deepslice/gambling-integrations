@@ -1,19 +1,18 @@
-import {AuthSessionService} from '#app/modules/auth/auth-session.service'
+import request from 'supertest'
 import {describe, expect, it, jest} from '@jest/globals'
+import {AuthSessionService} from '#app/modules/auth/auth-session.service'
+import app from '#app/app'
 
-jest.mock('#app/modules/auth/auth-session.service', () => ({
-  validateSessionToken: jest.fn(),
-}))
+AuthSessionService.setSessionToken = jest.fn()
+AuthSessionService.validateSessionToken = jest.fn(async (token) => false)
 
-describe('POST /api/v1/wallet/deposits', () => {
-  it('should be authenticated', (done) => {
-    AuthSessionService.validateSessionToken.mockReturnValue(true)
+describe('GET /api/v1/wallet/balances', () => {
+  it('should be authenticated', async () => {
+    const response = await request(app)
+      .get('/api/v1/wallet/balances')
+      .set('Authorization', 'AUTH 12345')
 
-    // request(app)
-    //   .post('/api/v1/wallet/deposits')
-    //   .set('Authorization', 'AUTH 12345')
-    //   .expect(200)
-
-    expect(true).toBe(true)
+    expect(AuthSessionService.validateSessionToken).toBeCalled()
+    expect(response.status).toBe(403)
   })
 })

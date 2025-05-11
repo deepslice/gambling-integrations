@@ -1,6 +1,6 @@
 export class WalletController {
   static async getBalance(req, res) {
-
+    res.status(200).end()
   }
 
   static async depositFunds(req, res) {
