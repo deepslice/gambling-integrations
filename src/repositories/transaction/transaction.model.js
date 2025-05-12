@@ -1,16 +1,47 @@
 import {databaseConnection} from '#app/infrastructure/database/connection'
+import {assertField} from '#app/utils/assert.util'
+
+class TransactionTypeEnum {
+  static get BET() {
+    return ':BET'
+  }
+
+  static get WIN() {
+    return ':WIN'
+  }
+}
 
 export class TransactionModel {
   constructor(database = databaseConnection) {
     this.database = database
   }
 
-  async getTransactionIdBet(prefixId) {
-    getTransactionId(key, ':BET')
+  async getTransactionId(key, type) {
+    const [[transaction]] = await this.database.query(`
+                select id AS id
+                from casino_transactions
+                where transaction_id = concat(?, ?)`,
+      [key, type],
+    )
+    return assertField(transaction, 'id')
   }
 
-  async getTransactionIdWin(prefixId) {
-    getTransactionId(key, ':WIN')
+  async hasBetTransaction(id) {
+    try {
+      const txId = await this.getTransactionId(id, TransactionTypeEnum.BET)
+      return !!txId
+    } catch (e) {
+      return false
+    }
+  }
+
+  async hasWinTransaction(id) {
+    try {
+      const txId = await this.getTransactionId(id, TransactionTypeEnum.WIN)
+      return !!txId
+    } catch (e) {
+      return false
+    }
   }
 
   async insertTransaction() {
@@ -44,15 +75,6 @@ export class TransactionModel {
         game.provider, game.uuid, convertCurrency,
         user.nativeCurrency, conversion.rate,
       ],
-    )
-  }
-
-  async getTransactionId(key) {
-    await this.database.query(`
-                select id AS id
-                from casino_transactions
-                where transaction_id = concat(?, ?)`,
-      [key],
     )
   }
 }

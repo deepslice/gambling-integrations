@@ -26,18 +26,24 @@ export class WalletService {
     this.wageringService = wageringService
   }
 
-  async transaction(context, userId, gameId, transactionId, amount) {
+  async transaction(context, userId, gameId, transactionId, amount, isBet = true) {
     if (amount < 0) {
       throw new Error('Bet amount must be greater than 0')
     }
 
-    const [{id: existedId}] = await TransactionModel.getTransactionIdBet(transactionId)
-    if (existedId) {
-      return new Error('Transaction already exists')
+    if (await this.transactionRepository.hasBetTransaction()) {
+      isBet = false
     }
 
+    // this.transactionRepository.hasWinTransaction()
+
+    // const [{id: existedId}] = await TransactionModel.getTransactionIdBet(transactionId)
+    // if (existedId) {
+    //   return new Error('Transaction already exists')
+    // }
+
     // 1. Проверяем наличие активного пользователя с данным userId
-    const user = await UserModel.getUserInfo(userId)
+    const user = await this.userRepository.getUserInfo(userId)
     if (!isUserActive(user)) {
       throw new Error('Player not found or invalid')
     }
@@ -47,7 +53,7 @@ export class WalletService {
     }
 
     // 2. Проверяем наличие активной игры с данным gameId
-    const game = await GameModel.getGameInfo(gameId)
+    const game = await this.gameRepository.getGameInfo(gameId)
     if (!isGameActive(game)) {
       throw new Error('Game not found or invalid')
     }
