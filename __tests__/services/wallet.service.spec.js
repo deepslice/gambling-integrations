@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, jest, test} from '@jest/globals'
+import {describe, expect, it, jest} from '@jest/globals'
 import {GameService} from '#app/services/game.service'
 import {fixNumber} from '#app/utils/math'
 
@@ -45,10 +45,6 @@ describe('Wallet Service', () => {
     balance: 150,
   }
 
-  beforeEach(() => {
-
-  })
-
   userRepositoryMock.getUserInfo = jest.fn(async () => {
     return userInfo
   })
@@ -75,13 +71,13 @@ describe('Wallet Service', () => {
     prefix: 'a',
   }
 
-  test('Get Balance', async () => {
+  it('should return balance', async () => {
     // userBalance.balance = 150
     const balance = await walletService.getBalance(context, userId, gameId)
     expect(balance).toEqual(fixNumber(100))
   })
 
-  test('Get Wagering Balance', async () => {
+  it('should return wagering balance', async () => {
     context.wageringBalanceId = 1
     const balance = await walletService.getBalance(context, userId, gameId)
     expect(balance).toEqual(fixNumber(150))

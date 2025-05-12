@@ -11,7 +11,7 @@
     "start": "node dist/src/app/main.js",
     "migrate": "node scripts/db-migration.script.js",
     "lint": "eslint src",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent"
   },
   "dependencies": {
     "express": "^5.1.0",

@@ -9,10 +9,6 @@ export class CurrencyConverterService {
   ) {
     this.database = database
     this.cache = cache
-    this.init()
-  }
-
-  init() {
   }
 
   async convert(currency, convertCurrency, amount, prefix) {
