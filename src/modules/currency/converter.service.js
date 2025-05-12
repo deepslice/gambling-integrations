@@ -17,16 +17,19 @@ export class CurrencyConverterService {
 
   async convert(currency, convertCurrency, amount, prefix) {
     const rate = await this.getRate(currency, convertCurrency, prefix)
-
     if (!rate) {
-      // Вычисляем результат в SQL для большей точности
-      await this.database.query(`
-          select ? / ? as balance
-               , ? * ? as convertedAmount
-          from users
-          where id = ?
-      `, [amount, rate, amount, rate])
+      return null
     }
+
+    // Вычисляем результат в SQL для большей точности
+    const [[userBalance]] = await this.database.query(`
+        select ? / ? as balance
+             , ? * ? as convertedAmount
+        from users
+        where id = ?
+    `, [amount, rate, amount, rate])
+
+    return userBalance
   }
 
   async getConvertSettings(prefix) {

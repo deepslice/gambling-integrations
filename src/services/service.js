@@ -7,14 +7,18 @@ import {TransactionModel} from '#app/models/transaction/transaction.model'
 import {randomBytes} from 'node:crypto'
 import * as errors from '../utils/exceptions.util'
 import {CurrencyConverterService} from '#app/modules/currency/converter.service'
+import {WageringService} from '#app/modules/wagering/wagering.service'
+import {fixNumber} from '#app/utils/math'
 
 const sessionTTLSeconds = 30 * 60 * 60
 
 export class GameService {
   constructor(
     currencyService = new CurrencyConverterService(),
+    wageringService = new WageringService(),
   ) {
     this.currencyService = currencyService
+    this.wageringService = wageringService
   }
 
   /**
@@ -123,28 +127,32 @@ export class GameService {
 
     // 3. Конвертируем валюту пользователя, при необходимости
     const convertSettings = await this.currencyService.getConvertSettings(session.prefix)
-    const conversion = await this.currencyService.convert(
+    const convertedBalance = await this.currencyService.convert(
       user.currency,
       convertSettings?.currency,
       session.prefix,
     )
-    // TODO: Implement
-    UserModel.updateCurrency(conversion)
+
+    user.balance = convertedBalance.balance
+    user.convertedAmount = convertedBalance.convertedAmount
+    user.currency = 'USD' // TODO: Move to constants
 
     // 4. Применяем игровые бонусы
+    if (session.wageringBalanceId) {
+      const wBalance = await this.wageringService.getWageringBalance(
+        userId,
+        session.wageringBalanceId,
+        convertedBalance.rate,
+      )
 
-    // const isWageringBalanceValid = await handleWageringBalanceV2(wPool, wageringBalanceId, user, conversion.rate)
+      user.balance = wBalance || user.balance
+    }
 
-    // if (!isWageringBalanceValid) {
-    //   const response = {
-    //     error: 'Global error.',
-    //     errorCode: 1008,
-    //   }
-    //
-    //   res.status(200).json(response).end()
-    //   console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Balance4#####', req.path, JSON.stringify(req.body), JSON.stringify(response))
-    //   return
-    // }
+    // 5. Применяем изменения к пользователю
+    await UserModel.update(user)
+
+    // 6. Возвращаем актуальный баланс
+    return fixNumber(user.balance)
   }
 
   async depositFunds(gameId, userId, amount) {
