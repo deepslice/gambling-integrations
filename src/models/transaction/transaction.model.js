@@ -1,18 +1,20 @@
-import dbConnection from '#app/infrastructure/.deprecated/db.connection'
+import {databaseConnection} from '#app/infrastructure/database/connection'
 
 export class TransactionModel {
-  static async getTransactionIdBet(prefixId) {
+  constructor(database = databaseConnection) {
+    this.database = database
+  }
+
+  async getTransactionIdBet(prefixId) {
     getTransactionId(key, ':BET')
   }
 
-  static async getTransactionIdWin(prefixId) {
+  async getTransactionIdWin(prefixId) {
     getTransactionId(key, ':WIN')
   }
 
-  static async insertTransaction() {
-    const conn = dbConnection.getConnection()
-
-    const [{insertId: txId}] = await conn.query(`
+  async insertTransaction() {
+    const [{insertId: txId}] = await this.database.query(`
                 insert into casino_transactions (amount, transaction_id, player_id,
                                                  action, aggregator, provider,
                                                  game_id, currency, session_id,
@@ -29,10 +31,8 @@ export class TransactionModel {
     return txId
   }
 
-  static async insertConvertedTransaction() {
-    const conn = dbConnection.getConnection()
-
-    await conn.query(`
+  async insertConvertedTransaction() {
+    await this.database.query(`
                 insert into casino_converted_transactions (id, amount, converted_amount,
                                                            user_id, action, aggregator,
                                                            provider, uuid, currency,
@@ -48,9 +48,7 @@ export class TransactionModel {
   }
 
   async getTransactionId(key) {
-    const conn = dbConnection.getConnection()
-
-    await conn.query(`
+    await this.database.query(`
                 select id AS id
                 from casino_transactions
                 where transaction_id = concat(?, ?)`,

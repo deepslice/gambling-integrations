@@ -1,4 +1,4 @@
-import dbConnection from '#app/infrastructure/.deprecated/db.connection'
+import {databaseConnection} from '#app/infrastructure/database/connection'
 
 const getGameInfo = `
     SELECT g.uuid       AS uuid
@@ -16,10 +16,12 @@ const getGameInfo = `
     WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`
 
 export class GameModel {
-  static async getGameInfo(gameId) {
-    const conn = dbConnection.getConnection()
+  constructor(database = databaseConnection) {
+    this.database = database
+  }
 
-    const [[game]] = await conn.query(
+  async getGameInfo(gameId) {
+    const [[game]] = await this.database.query(
       getGameInfo, [gameId],
     )
 

@@ -1,8 +1,16 @@
-import dbConnection from '#app/infrastructure/.deprecated/db.connection'
+import {databaseConnection} from '#app/infrastructure/database/connection'
 
 export class UserModel {
-  static async getUserBalance(useId) {
-    const [[userBalance]] = await trx.query(`
+  constructor(database = databaseConnection) {
+    this.database = database
+  }
+
+  static async getUserParents() {
+
+  }
+
+  async getUserBalance(useId) {
+    const [[userBalance]] = await this.database.query(`
         select ? / ? as balance
              , ? * ? as convertedAmount
         from users
@@ -10,10 +18,8 @@ export class UserModel {
     `, [user.balance, rate, user?.convertedAmount || 0, rate, user.id])
   }
 
-  static async getUserInfo(userId) {
-    const conn = dbConnection.getConnection()
-
-    const [[user]] = await conn.query(`
+  async getUserInfo(userId) {
+    const [[user]] = await this.database.query(`
         SELECT id                                      AS id
              , balance                                 AS balance
              , balance                                 AS nativeBalance
@@ -32,9 +38,5 @@ export class UserModel {
     )
 
     return user
-  }
-
-  static async getUserParents() {
-
   }
 }

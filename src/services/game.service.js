@@ -1,10 +1,8 @@
-import {AuthStore} from '#app/modules/auth/auth.store'
 import {UserModel} from '#app/models/user/user.model'
 import {isUserActive} from '#app/models/user/user.util'
 import {GameModel} from '#app/models/game/game.model'
 import {isGameActive} from '#app/models/game/game.util'
 import {TransactionModel} from '#app/models/transaction/transaction.model'
-import {randomBytes} from 'node:crypto'
 import * as errors from '../utils/exceptions.util'
 import {CurrencyConverterService} from '#app/modules/currency/converter.service'
 import {WageringService} from '#app/modules/wagering/wagering.service'
@@ -37,7 +35,7 @@ export class GameService {
     }
 
     // 1. Проверяем наличие активного пользователя с данным userId
-    const user = UserModel.getUserInfo(userId)
+    const user = await UserModel.getUserInfo(userId)
     if (!isUserActive(user)) {
       throw new Error('Player not found or invalid')
     }
@@ -47,7 +45,7 @@ export class GameService {
     }
 
     // 2. Проверяем наличие активной игры с данным gameId
-    const game = GameModel.getGameInfo(gameId)
+    const game = await GameModel.getGameInfo(gameId)
     if (!isGameActive(game)) {
       throw new Error('Game not found or invalid')
     }
@@ -128,29 +126,29 @@ export class GameService {
 
   // TODO: Implement
   async gameInit(operatorId, gameId) {
-    // Открываем сессию, записываем токен
-    const token = randomBytes(36).toString('hex')
-    await AuthStore.setSessionToken(token, {}, sessionTTLSeconds)
-
-    const url = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`).then(resp => {
-      return resp.config.url || null
-    }).catch((error) => {
-      console.error('error ', error)
-      return null
-    })
+    // // Открываем сессию, записываем токен
+    // const token = randomBytes(36).toString('hex')
+    // await AuthStore.setSessionToken(token, {}, sessionTTLSeconds)
+    //
+    // const url = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`).then(resp => {
+    //   return resp.config.url || null
+    // }).catch((error) => {
+    //   console.error('error ', error)
+    //   return null
+    // })
   }
 
   async getBalance(context, userId, gameId) {
-    // 1. Проверяем наличие активной игры с данным gameId
-    const game = this.gameRepository.getGameInfo(gameId)
-    if (!isGameActive(game)) {
-      throw new Error('Game not found or invalid')
+    // 1. Проверяем наличие активного пользователя с данным userId
+    const user = await this.userRepository.getUserInfo(userId)
+    if (!isUserActive(user)) {
+      throw new Error('User not found or invalid')
     }
 
-    // 2. Проверяем наличие активного пользователя с данным userId
-    const user = this.userRepository.getUserInfo(userId)
-    if (!isUserActive(user)) {
-      throw new Error('Player not found or invalid')
+    // 2. Проверяем наличие активной игры с данным gameId
+    const game = await this.gameRepository.getGameInfo(gameId)
+    if (!isGameActive(game)) {
+      throw new Error('Game not found or invalid')
     }
 
     // 3. Конвертируем валюту пользователя, при необходимости
@@ -178,7 +176,7 @@ export class GameService {
 
     // TODO: Сравнить с flow, возможно сохранять не нужно
     // 5. Применяем изменения к пользователю
-    await this.userRepository.update(user)
+    // await this.userRepository.update(user)
 
     // 6. Возвращаем актуальный баланс
     return fixNumber(user.balance)

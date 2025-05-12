@@ -1,5 +1,6 @@
-import {describe, expect, it, jest, test} from '@jest/globals'
+import {describe, expect, jest, test} from '@jest/globals'
 import {GameService} from '#app/services/game.service'
+import {fixNumber} from '#app/utils/math'
 
 describe('Wallet Service', () => {
   // Инициализируем mocks
@@ -19,31 +20,70 @@ describe('Wallet Service', () => {
   const wageringServiceMock = {}
   wageringServiceMock.getWageringBalance = jest.fn()
 
+  // const context = {
+  //   userRepository: userRepositoryMock,
+  //   gameRepository: gameRepositoryMock,
+  //   currencyService: currencyServiceMock,
+  //   wageringService: wageringServiceMock,
+  // }
+
   // Целевой сервис с внедренными mocks
   const walletService = new GameService(
+    userRepositoryMock,
+    gameRepositoryMock,
     currencyServiceMock,
     wageringServiceMock,
   )
 
-  test('Get Balance', () => {
-    walletService.getBalance(context, userId, gameId)
-
-    it('', () => {
-      expect(1).toBe(1)
+  test('Get Balance', async () => {
+    userRepositoryMock.getUserInfo = jest.fn(async () => {
+      return {
+        id: 1,
+        balance: 100,
+        convertedAmount: 100,
+        currency: 'USD',
+        active: true,
+        deleted: false,
+      }
     })
-  })
 
-  test('Deposit Funds', () => {
-
-    it('', () => {
-      expect(1).toBe(1)
+    gameRepositoryMock.getGameInfo = jest.fn(async () => {
+      return {
+        id: 1,
+        provider: 'agp',
+        providerUid: '12345',
+        finalGameId: '12345',
+        active: true,
+        deleted: false,
+      }
     })
-  })
 
-  test('Withdrawal Funds', () => {
-
-    it('', () => {
-      expect(1).toBe(1)
+    currencyServiceMock.getConvertSettings = jest.fn(async () => {
+      return {
+        rate: 1,
+        currency: 'USD',
+      }
     })
+    currencyServiceMock.convert = jest.fn(async () => {
+      return {
+        rate: 1,
+        currency: 'USD',
+        balance: 100,
+        convertedAmount: 100,
+      }
+    })
+
+    // wageringServiceMock.getWageringBalance = jest.fn(async () => {
+    // })
+
+    const userId = 1
+    const gameId = 1
+    const context = {
+      prefix: 'a',
+      // wageringBalanceId: 1,
+    }
+
+    const balance = await walletService.getBalance(context, userId, gameId)
+    expect(balance).toEqual(fixNumber(100))
   })
 })
