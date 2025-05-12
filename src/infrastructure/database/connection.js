@@ -1,6 +1,5 @@
-const mysql = require('mysql2/promise')
-const config = require('./config')
-const {mysql: mysqlConfig} = config
+import mysql from 'mysql2/promise'
+import mysqlConfig from './config.js'
 
 class MySQLConnection {
   constructor() {
