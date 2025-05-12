@@ -3,6 +3,14 @@ import {GameService} from '#app/services/game.service'
 
 describe('Wallet Service', () => {
   // Инициализируем mocks
+  const userRepositoryMock = {}
+  userRepositoryMock.getUserInfo = jest.fn()
+
+  // Инициализируем mocks
+  const gameRepositoryMock = {}
+  gameRepositoryMock.getGameInfo = jest.fn()
+
+  // Инициализируем mocks
   const currencyServiceMock = {}
   currencyServiceMock.getConvertSettings = jest.fn()
   currencyServiceMock.convert = jest.fn()
@@ -18,7 +26,8 @@ describe('Wallet Service', () => {
   )
 
   test('Get Balance', () => {
-    walletService.getBalance()
+    walletService.getBalance(context, userId, gameId)
+
     it('', () => {
       expect(1).toBe(1)
     })

@@ -15,9 +15,13 @@ const sessionTTLSeconds = 30 * 60 * 60
 
 export class GameService {
   constructor(
+    userRepository = UserModel,
+    gameRepository = GameModel,
     currencyService = new CurrencyConverterService(),
     wageringService = new WageringService(),
   ) {
+    this.userRepository = userRepository
+    this.gameRepository = gameRepository
     this.currencyService = currencyService
     this.wageringService = wageringService
   }
@@ -138,13 +142,13 @@ export class GameService {
 
   async getBalance(context, userId, gameId) {
     // 1. Проверяем наличие активной игры с данным gameId
-    const game = GameModel.getGameInfo(gameId)
+    const game = this.gameRepository.getGameInfo(gameId)
     if (!isGameActive(game)) {
       throw new Error('Game not found or invalid')
     }
 
     // 2. Проверяем наличие активного пользователя с данным userId
-    const user = UserModel.getUserInfo(userId)
+    const user = this.userRepository.getUserInfo(userId)
     if (!isUserActive(user)) {
       throw new Error('Player not found or invalid')
     }
@@ -172,8 +176,9 @@ export class GameService {
       user.balance = wBalance || user.balance
     }
 
+    // TODO: Сравнить с flow, возможно сохранять не нужно
     // 5. Применяем изменения к пользователю
-    await UserModel.update(user)
+    await this.userRepository.update(user)
 
     // 6. Возвращаем актуальный баланс
     return fixNumber(user.balance)
