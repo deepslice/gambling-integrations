@@ -1,5 +1,6 @@
 import redis from '#app/infrastructure/cache/index'
 import {databaseConnection} from '#app/infrastructure/database/connection'
+import {assertField} from '#app/utils/assert.util'
 
 export class CurrencyConverterService {
   constructor(
@@ -26,6 +27,17 @@ export class CurrencyConverterService {
           where id = ?
       `, [amount, rate, amount, rate])
     }
+  }
+
+  async getConvertSettings(prefix) {
+    const [[convertSettings]] = await this.database.query(`
+        select currency as currency
+        from global.casino_convert_settings
+        where prefix = ?
+          and provider = 'aspect'
+    `, [prefix])
+
+    return assertField(convertSettings, 'currency')
   }
 
   async getRate(currency, convertCurrency, prefix) {
