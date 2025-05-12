@@ -29,6 +29,7 @@ export class CurrencyConverterService {
         where id = ?
     `, [amount, rate, amount, rate])
 
+    userBalance.rate = rate
     return userBalance
   }
 

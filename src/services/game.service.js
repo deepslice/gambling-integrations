@@ -9,6 +9,7 @@ import * as errors from '../utils/exceptions.util'
 import {CurrencyConverterService} from '#app/modules/currency/converter.service'
 import {WageringService} from '#app/modules/wagering/wagering.service'
 import {fixNumber} from '#app/utils/math'
+import {assertField} from '#app/utils/assert.util'
 
 const sessionTTLSeconds = 30 * 60 * 60
 
@@ -21,31 +22,33 @@ export class GameService {
     this.wageringService = wageringService
   }
 
-  /**
-   * @param {string} userId
-   * @param {string} gameId
-   * @param {number} amount
-   * @returns
-   */
-  static async transaction(userId, gameId, amount) {
-    // res.status(500).end()
-    // console.error(getCurrentDatetime(), `#${req._id}`, Date.now() - req._tm, '#####Debit2#####', req.path, JSON.stringify(req.body))
-
+  static async transaction(context, userId, gameId, transactionId, amount) {
     if (amount < 0) {
-      return
+      throw new Error('Bet amount must be greater than 0')
     }
 
-    //const txn = await dbConnection.getConnection()
+    const [{id: existedId}] = await TransactionModel.getTransactionIdBet(transactionId)
+    if (existedId) {
+      return new Error('Transaction already exists')
+    }
 
+    // 1. Проверяем наличие активного пользователя с данным userId
     const user = UserModel.getUserInfo(userId)
     if (!isUserActive(user)) {
-      throw new errors.InvalidPlayerError()
+      throw new Error('Player not found or invalid')
     }
 
     if (user.balance < amount) {
-      throw new errors.InsufficientFundsError()
+      throw new Error('Insufficient funds')
     }
 
+    // 2. Проверяем наличие активной игры с данным gameId
+    const game = GameModel.getGameInfo(gameId)
+    if (!isGameActive(game)) {
+      throw new Error('Game not found or invalid')
+    }
+
+    // TODO: Refactor it
     const status = user.status
     if (status) {
       if (status.transactions || status.casino) {
@@ -53,49 +56,69 @@ export class GameService {
       }
     }
 
-    const game = GameModel.getGameInfo(gameId)
-    if (!isGameActive(game)) {
-      throw new errors.InvalidGameError()
-    }
-
-    const [{id: txId}] = await TransactionModel.getTransactionIdBet(transactionKey)
-    if (txId) {
-      return
-    }
-
     user.convertedAmount = amount
 
-    try {
-      await txn.beginTransaction()
+    // 3. Конвертируем валюту пользователя, при необходимости
+    const convertSettings = await this.currencyService.getConvertSettings(context.prefix)
+    const convertedBalance = await this.currencyService.convert(
+      user.currency, convertSettings?.currency, context.prefix,
+    )
 
-      const conversion = await convertCurrencyForUserV2(convertCurrency, wPool, prefix, client, user, 1)
+    assertField(convertedBalance, 'rate')
+    user.balance = convertedBalance.balance
+    user.convertedAmount = convertedBalance.convertedAmount
+    user.currency = 'USD' // TODO: Move to constants
 
-      if (!conversion.rate) {
-        const response = {
-          error: 'Global error.',
-          errorCode: 1008,
-        }
+    // 4. Применяем игровые бонусы
+    if (context.wageringBalanceId) {
+      const wBalance = await this.wageringService.getWageringBalance(
+        userId,
+        context.wageringBalanceId,
+        convertedBalance.rate,
+      )
 
-        await txn.rollback()
-        return
-      }
-
-      const isWageringBalanceValid = await handleWageringBalanceV2(wPool, wageringBalanceId, user, conversion.rate)
-
-      if (!isWageringBalanceValid) {
-        const response = {
-          error: 'Global error.',
-          errorCode: 1008,
-        }
-
-        await txn.rollback()
-      }
-
-    } catch (error) {
-
-    } finally {
-
+      user.balance = wBalance || user.balance
     }
+
+    // TODO: Сравнить с flow
+    // 5. Применяем изменения к пользователю
+    await UserModel.update(user)
+
+    // 6. Сохраняем транзакцию в базу данных
+
+    // const [{insertId: txId}] = await trx.query(`
+    //       insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
+    //                                        currency, session_id, section, round_id, freespin_id)
+    //       values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    //   `, [user.convertedAmount, transactionId, ':BET', user.id, 'BET', 'aspect',
+    //   game.provider, game.uuid, user.nativeCurrency, token, game.section, transactionId, wageringBalanceId ? wageringBalanceId : null])
+
+    // if (convertCurrency) {
+    //   await trx.query(`
+    //         insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
+    //                                                    provider, uuid, currency, currency_to, rate)
+    //         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    //     `, [txId, -amount, -user.convertedAmount, user.id, 1, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
+    // }
+
+    // await trx.query(`
+    //       insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
+    //                                 currency, additional_info)
+    //       values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
+    //       on duplicate key update bet_amount = bet_amount + ?
+    //  `, [user.convertedAmount, transactionId, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({wageringBalanceId}) : null, user.convertedAmount])
+
+    // await trx.query(`
+    //       update casino.limits
+    //       set bet_limit = bet_limit - ?
+    //       where project_id = ?
+    //   `, [user.convertedAmount, project.id])
+
+    // await pool.query(`
+    //       update casino.restrictions
+    //       set ggr = ggr - ? / ?
+    //       where code = ?
+    //   `, [amount, currencyRate[user.currency] || 1, game.providerUid])
   }
 
   // TODO: Implement
@@ -112,7 +135,7 @@ export class GameService {
     })
   }
 
-  async getBalance(gameId, userId, session) {
+  async getBalance(context, userId, gameId) {
     // 1. Проверяем наличие активной игры с данным gameId
     const game = GameModel.getGameInfo(gameId)
     if (!isGameActive(game)) {
@@ -126,11 +149,11 @@ export class GameService {
     }
 
     // 3. Конвертируем валюту пользователя, при необходимости
-    const convertSettings = await this.currencyService.getConvertSettings(session.prefix)
+    const convertSettings = await this.currencyService.getConvertSettings(context.prefix)
     const convertedBalance = await this.currencyService.convert(
       user.currency,
       convertSettings?.currency,
-      session.prefix,
+      context.prefix,
     )
 
     user.balance = convertedBalance.balance
@@ -138,10 +161,10 @@ export class GameService {
     user.currency = 'USD' // TODO: Move to constants
 
     // 4. Применяем игровые бонусы
-    if (session.wageringBalanceId) {
+    if (context.wageringBalanceId) {
       const wBalance = await this.wageringService.getWageringBalance(
         userId,
-        session.wageringBalanceId,
+        context.wageringBalanceId,
         convertedBalance.rate,
       )
 
@@ -155,14 +178,14 @@ export class GameService {
     return fixNumber(user.balance)
   }
 
-  async depositFunds(gameId, userId, amount) {
-    // Проверяем наличие активной игры с данным gameId
+  async depositFunds(context, userId, gameId, amount) {
+    // 1. Проверяем наличие активной игры с данным gameId
     const game = GameModel.getGameInfo(gameId)
     if (!isGameActive(game)) {
       throw new Error('Game not found or invalid')
     }
 
-    // Проверяем наличие активного пользователя с данным userId
+    // 2. Проверяем наличие активного пользователя с данным userId
     const user = UserModel.getUserInfo(userId)
     if (!isUserActive(user)) {
       throw new Error('Player not found or invalid')
