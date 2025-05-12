@@ -1,13 +1,13 @@
 import dbConnection from '#app/infrastructure/.deprecated/db.connection'
 import * as errors from '../utils/exceptions.util'
 
-import {UserModel} from '#app/models/user/user.model'
-import {isUserActive} from '#app/models/user/user.util'
+import {UserModel} from 'src/repositories/user/user.model'
+import {isUserActive} from '#app/utils/user.util'
 
-import {GameModel} from '#app/models/game/game.model'
-import {isGameActive} from '#app/models/game/game.util'
+import {GameModel} from 'src/repositories/game/game.model'
+import {isGameActive} from '#app/utils/common.util'
 
-import {TransactionModel} from '#app/models/transaction/transaction.model'
+import {TransactionModel} from 'src/repositories/transaction/transaction.model'
 
 export class AspectService {
   // Проверка на существование активной игры

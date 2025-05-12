@@ -1,18 +1,20 @@
 import {describe, expect, it, jest} from '@jest/globals'
-import {GameService} from '#app/services/game.service'
-import {fixNumber} from '#app/utils/math'
+import {WalletService} from '#app/services/wallet.service'
+import {fixNumber} from '#app/utils/math.util'
 
 describe('Wallet Service', () => {
   // Инициализируем mocks
   const userRepositoryMock = {}
   const gameRepositoryMock = {}
+  const transactionRepositoryMock = {}
   const currencyServiceMock = {}
   const wageringServiceMock = {}
 
   // Целевой сервис с внедренными mocks
-  const walletService = new GameService(
+  const walletService = new WalletService(
     userRepositoryMock,
     gameRepositoryMock,
+    transactionRepositoryMock,
     currencyServiceMock,
     wageringServiceMock,
   )
