@@ -52,17 +52,17 @@ export class TransactionModel {
                                                  section, round_id, freespin_id)
                 values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.convertedAmount, data.transactionKey, TransactionTypeEnum.BET,
-        data.id, 'BET', 'aspect', data.provider, data.uuid,
-        data.nativeCurrency, data.token, data.section,
-        data.transactionKey, data.wageringBalanceId ? data.wageringBalanceId : null,
+        data.convertedAmount, data.transactionId, TransactionTypeEnum.BET,
+        data.userId, 'BET', 'aspect', data.provider, data.gameUuid,
+        data.nativeCurrency, data.sessionToken, data.section,
+        data.transactionId, data.wageringBalanceId ? data.wageringBalanceId : null,
       ],
     )
 
     return txId
   }
 
-  async insertConvertedTransaction() {
+  async insertConvertedTransaction(data) {
     await this.database.query(`
                 insert into casino_converted_transactions (id, amount, converted_amount,
                                                            user_id, action, aggregator,
@@ -70,10 +70,10 @@ export class TransactionModel {
                                                            currency_to, rate)
                 values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        txId, -dto.amount, -user.convertedAmount,
-        user.id, 1, 'aspect',
-        game.provider, game.uuid, convertCurrency,
-        user.nativeCurrency, conversion.rate,
+        data.transactionId, -data.amount, -data.convertedAmount,
+        data.userId, 1, 'aspect',
+        data.provider, data.gameUuid, data.convertCurrency,
+        data.nativeCurrency, data.conversionRate,
       ],
     )
   }

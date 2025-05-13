@@ -95,21 +95,31 @@ export class WalletService {
     await UserModel.update(user)
 
     // 6. Сохраняем транзакцию в базу данных
+    const [{insertId: txId}] = await this.transactionRepository.insertTransaction({
+      amount: user.convertedAmount,
+      transactionId: transactionId,
+      playerId: user.id,
+      action: 'BET',
+      aggregator: 'aspect',
+      provider: game.provider,
+      gameId: game.uuid,
+      currency: user.nativeCurrency,
+      sessionId: context.sessionToken,
+    })
 
-    // const [{insertId: txId}] = await trx.query(`
-    //       insert into casino_transactions (amount, transaction_id, player_id, action, aggregator, provider, game_id,
-    //                                        currency, session_id, section, round_id, freespin_id)
-    //       values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    //   `, [user.convertedAmount, transactionId, ':BET', user.id, 'BET', 'aspect',
-    //   game.provider, game.uuid, user.nativeCurrency, token, game.section, transactionId, wageringBalanceId ? wageringBalanceId : null])
-
-    // if (convertCurrency) {
-    //   await trx.query(`
-    //         insert into casino_converted_transactions (id, amount, converted_amount, user_id, action, aggregator,
-    //                                                    provider, uuid, currency, currency_to, rate)
-    //         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    //     `, [txId, -amount, -user.convertedAmount, user.id, 1, 'aspect', game.provider, game.uuid, convertCurrency, user.nativeCurrency, conversion.rate])
-    // }
+    if (convertSettings?.currency) {
+      await this.transactionRepository.insertConvertedTransaction({
+        id: txId,
+        amount: -amount,
+        convertedAmount: -user.convertedAmount,
+        userId: user.id,
+        action: 1,
+        aggregator: 'aspect',
+        provider: game.provider,
+        uuid: game.uuid,
+        currency: convertCurrency,
+      })
+    }
 
     // await trx.query(`
     //       insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
@@ -117,6 +127,8 @@ export class WalletService {
     //       values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
     //       on duplicate key update bet_amount = bet_amount + ?
     //  `, [user.convertedAmount, transactionId, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({wageringBalanceId}) : null, user.convertedAmount])
+
+    // 7. Обновляем лимиты пользователя
 
     // await trx.query(`
     //       update casino.limits
