@@ -1,40 +1,60 @@
 import {dbConnection} from '#app/infrastructure/.deprecated/db.connection'
+import {assertField} from '#app/utils/assert.util'
 
-class AppConfig {
-  constructor() {
-    this.host = 'localhost' || process.env.APP_HOST
-    this.port = 3000 || process.env.APP_PORT
-    this.dbHost = 'localhost' || process.env.DB_HOST
-    this.dbPort = 3306 || process.env.DB_PORT
-    this.dbName = 'dbName' || process.env.DB_NAME
-    this.dbUser = 'dbUser' || process.env.DB_USER
-    this.dbPassword = 'dbPassword' || process.env.DB_PASSWORD
-    this.dbSsl = 'false' || process.env.DB_SSL
-  }
+const ConfigTypeEnum = {
+  ASPECT: 'aspect',
+  SPADES: 'spades',
 }
 
-class ProjectConfig {
-  constructor() {
-    this.id = 0
-    this.prefix = ''
-    this.db = ''
-    this.currency = ''
-    this.config = ''
-    this.secretKey = ''
-    this.operatorId = 0
-    this.balanceLimit = 0
-    this.winLimit = 0
-  }
-}
+export class ConfigService {
+  private id
+  private prefix
+  private db
+  private currency
+  private config
+  private secretKey
+  private operatorId
+  private balanceLimit
+  private winLimit
 
-export class ConfigModule {
-
-  constructor(database = dbConnection) {
+  constructor(context, configType = ConfigTypeEnum.ASPECT, database = dbConnection) {
+    this.configType = configType
+    this.prefix = assertField(context, 'prefix')
     this.database = database
   }
 
-  async getProviderConfig(prefix) {
-    const [[project]] = await this.database.query(`
+  async LoadConfig() {
+    await this.loadConfig()
+    return {
+      id: this.id,
+      prefix: this.prefix,
+      db: this.db,
+      currency: this.currency,
+      config: this.config,
+      secretKey: this.secretKey,
+      operatorId: this.operatorId,
+      balanceLimit: this.balanceLimit,
+    }
+  }
+
+  private async loadConfig() {
+    const project = await this.getConfig()
+    if (!project) {
+      return null
+    }
+
+    this.id = project.id
+    this.db = project.db
+    this.currency = project.currency
+    this.config = project.config
+    this.secretKey = project.secretKey
+    this.operatorId = project.operatorId
+    this.balanceLimit = project.balanceLimit
+    this.winLimit = project.winLimit
+  }
+
+  private async getConfig() {
+    const [[project]] = this.database.query(`
         select s.id                                               as id
              , s.prefix                                           as prefix
              , s.db_name                                          as db
@@ -49,12 +69,8 @@ export class ConfigModule {
                  left join global.configurations bl on bl.code = 'balance_limit' and bl.prefix = ac.prefix
                  left join global.configurations wl on wl.code = 'win_limit' and wl.prefix = ac.prefix
         where ac.prefix = ?
-    `, [prefix])
+    `, [this.prefix])
 
-    if (!config) {
-      throw ('config not found')
-    }
-
-    return config
+    return project.id ? project : null
   }
 }

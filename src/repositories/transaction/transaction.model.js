@@ -44,7 +44,7 @@ export class TransactionModel {
     }
   }
 
-  async insertTransaction() {
+  async insertTransaction(data) {
     const [{insertId: txId}] = await this.database.query(`
                 insert into casino_transactions (amount, transaction_id, player_id,
                                                  action, aggregator, provider,
@@ -52,10 +52,10 @@ export class TransactionModel {
                                                  section, round_id, freespin_id)
                 values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        user.convertedAmount, dto.transactionKey, ':BET',
-        user.id, 'BET', 'aspect', game.provider, game.uuid,
-        user.nativeCurrency, dto.token, game.section,
-        dto.transactionKey, wageringBalanceId ? wageringBalanceId : null,
+        data.convertedAmount, data.transactionKey, TransactionTypeEnum.BET,
+        data.id, 'BET', 'aspect', data.provider, data.uuid,
+        data.nativeCurrency, data.token, data.section,
+        data.transactionKey, data.wageringBalanceId ? data.wageringBalanceId : null,
       ],
     )
 
