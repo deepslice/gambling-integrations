@@ -6,7 +6,9 @@ describe('Wallet Service', () => {
   // Инициализируем mocks
   const userRepositoryMock = {}
   const gameRepositoryMock = {}
+  const roundRepositoryMock = {}
   const transactionRepositoryMock = {}
+  const limitRepositoryMock = {}
   const currencyServiceMock = {}
   const wageringServiceMock = {}
 
@@ -14,7 +16,9 @@ describe('Wallet Service', () => {
   const walletService = new WalletService(
     userRepositoryMock,
     gameRepositoryMock,
+    roundRepositoryMock,
     transactionRepositoryMock,
+    limitRepositoryMock,
     currencyServiceMock,
     wageringServiceMock,
   )

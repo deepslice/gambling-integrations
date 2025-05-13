@@ -2,7 +2,9 @@ import {CurrencyConverterService} from '#app/modules/currency/converter.service'
 import {WageringService} from '#app/modules/wagering/wagering.service'
 
 import {UserModel as UserRepository} from '#app/repositories/user/user.model'
+import {LimitModel as LimitRepository} from '#app/repositories/limit/limit.model'
 import {GameModel as GameRepository} from '#app/repositories/game/game.model'
+import {RoundModel as RoundRepository} from '#app/repositories/round/round.model'
 import {TransactionModel as TransactionRepository} from '#app/repositories/transaction/transaction.model'
 
 import * as errors from '#app/utils/exceptions.util'
@@ -15,13 +17,17 @@ export class WalletService {
   constructor(
     userRepository = new UserRepository(),
     gameRepository = new GameRepository(),
+    roundRepository = new RoundRepository(),
     transactionRepository = new TransactionRepository(),
+    limitRepository = new LimitRepository(),
     currencyService = new CurrencyConverterService(),
     wageringService = new WageringService(),
   ) {
     this.userRepository = userRepository
     this.gameRepository = gameRepository
+    this.roundRepository = roundRepository
     this.transactionRepository = transactionRepository
+    this.limitRepository = limitRepository
     this.currencyService = currencyService
     this.wageringService = wageringService
   }
@@ -107,6 +113,7 @@ export class WalletService {
       sessionId: context.sessionToken,
     })
 
+    // Если была конвертация валюты, то сохраняем ее в отдельную транзакцию
     if (convertSettings?.currency) {
       await this.transactionRepository.insertConvertedTransaction({
         id: txId,
@@ -121,26 +128,31 @@ export class WalletService {
       })
     }
 
-    // await trx.query(`
-    //       insert into casino_rounds(bet_amount, win_amount, round_id, user_id, aggregator, provider, uuid,
-    //                                 currency, additional_info)
-    //       values (?, 0, concat('ca:', ?), ?, ?, ?, ?, ?, ?)
-    //       on duplicate key update bet_amount = bet_amount + ?
-    //  `, [user.convertedAmount, transactionId, user.id, 'caleta', game.provider, game.uuid, user.nativeCurrency, wageringBalanceId ? JSON.stringify({wageringBalanceId}) : null, user.convertedAmount])
+    // 7. Открываем раунд
+    // TODO: this.roundService.openRound(game.uuid, user.id)
+    await this.roundRepository.insertRound({
+      gameId: game.uuid,
+      playerId: user.id,
+      amount: user.convertedAmount,
+      action: 'BET',
+      aggregator: 'aspect',
+      provider: game.provider,
+      sessionId: context.sessionToken,
+    })
 
-    // 7. Обновляем лимиты пользователя
-
-    // await trx.query(`
-    //       update casino.limits
-    //       set bet_limit = bet_limit - ?
-    //       where project_id = ?
-    //   `, [user.convertedAmount, project.id])
-
-    // await pool.query(`
-    //       update casino.restrictions
-    //       set ggr = ggr - ? / ?
-    //       where code = ?
-    //   `, [amount, currencyRate[user.currency] || 1, game.providerUid])
+    // 8. Обновляем лимиты пользователя
+    await this.limitRepository.updateLimits({
+      playerId: user.id,
+      gameId: game.uuid,
+      action: 'BET',
+      amount: user.convertedAmount,
+    })
+    
+    await this.limitRepository.updateRestrictions({
+      playerId: user.id,
+      gameId: game.uuid,
+      action: 'BET',
+    })
 
   }
 
