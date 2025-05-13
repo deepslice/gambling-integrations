@@ -8,7 +8,7 @@ export const authenticateSession = (req, res, next) => {
     return res.status(401).json({message: 'No token provided'})
   }
 
-  AuthSessionService.validateSessionToken(token).then(isValid => {
+  AuthSessionService.validateSession(token).then(isValid => {
     if (!isValid) {
       return res.status(403).json({message: 'Invalid token'})
     }

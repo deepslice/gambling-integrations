@@ -4,13 +4,22 @@ const sessionTTLSeconds = 30 * 60 * 60
 
 export class AuthSessionService {
   /**
+   * getSession
+   * @param token
+   * @returns {Promise<object>}
+   */
+  static async getSession(token) {
+    return await redis.get(token)
+  }
+
+  /**
    * setSessionToken
    * @param token
    * @param payload
    * @param ttl
    * @returns {Promise<boolean>}
    */
-  static async setSessionToken(token, payload, ttl) {
+  static async setSession(token, payload, ttl) {
     await redis.set(token, payload, ttl)
     return redis.client.exists(token)
   }
@@ -20,7 +29,7 @@ export class AuthSessionService {
    * @param token
    * @returns {Promise<boolean>}
    */
-  static async validateSessionToken(token) {
+  static async validateSession(token) {
     const exists = await redis.client.exists(token)
     return exists && redis.client.expire(token, sessionTTLSeconds)
   }

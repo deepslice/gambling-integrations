@@ -1,5 +1,4 @@
-import {dbConnection} from '#app/infrastructure/.deprecated/db.connection'
-import {assertField} from '#app/utils/assert.util'
+import {databaseConnection} from '#app/infrastructure/database/connection'
 
 const ConfigTypeEnum = {
   ASPECT: 'aspect',
@@ -7,53 +6,31 @@ const ConfigTypeEnum = {
 }
 
 class ConfigService {
-  private id
-  private prefix
-  private db
-  private currency
-  private config
-  private secretKey
-  private operatorId
-  private balanceLimit
-  private winLimit
-
-  constructor(context, configType = ConfigTypeEnum.ASPECT, database = dbConnection) {
-    this.configType = configType
-    this.prefix = assertField(context, 'prefix')
+  constructor(configType = ConfigTypeEnum.ASPECT, database = databaseConnection) {
     this.database = database
+    this.configType = configType
   }
 
-  async LoadConfig() {
-    await this.loadConfig()
-    return {
-      id: this.id,
-      prefix: this.prefix,
-      db: this.db,
-      currency: this.currency,
-      config: this.config,
-      secretKey: this.secretKey,
-      operatorId: this.operatorId,
-      balanceLimit: this.balanceLimit,
-    }
-  }
-
-  private async loadConfig() {
-    const project = await this.getConfig()
+  async loadConfig(prefix) {
+    const project = await this.getConfig(prefix)
     if (!project) {
       return null
     }
 
-    this.id = project.id
-    this.db = project.db
-    this.currency = project.currency
-    this.config = project.config
-    this.secretKey = project.secretKey
-    this.operatorId = project.operatorId
-    this.balanceLimit = project.balanceLimit
-    this.winLimit = project.winLimit
+    return {
+      id: project.id,
+      prefix: project.prefix,
+      db: project.db,
+      currency: project.currency,
+      config: project.config,
+      secretKey: project.secretKey,
+      operatorId: project.operatorId,
+      balanceLimit: project.balanceLimit,
+      winLimit: project.winLimit,
+    }
   }
 
-  private async getConfig() {
+  async getConfig(prefix) {
     const [[project]] = this.database.query(`
         select s.id                                               as id
              , s.prefix                                           as prefix
@@ -69,7 +46,7 @@ class ConfigService {
                  left join global.configurations bl on bl.code = 'balance_limit' and bl.prefix = ac.prefix
                  left join global.configurations wl on wl.code = 'win_limit' and wl.prefix = ac.prefix
         where ac.prefix = ?
-    `, [this.prefix])
+    `, [prefix])
 
     return project.id ? project : null
   }

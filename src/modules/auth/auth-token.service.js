@@ -4,12 +4,13 @@ import {assertField} from '#app/utils/assert.util'
 export class AuthTokenService {
   /**
    * validateToken
+   * @param prefix
    * @param token
    * @param originUrl
    * @returns {Promise<boolean>}
    */
-  static async validateToken(originUrl, token) {
-    const secretKey = await AuthTokenService.getSecretKey()
+  static async validateToken(prefix, originUrl, token) {
+    const secretKey = await AuthTokenService.getSecretKey(prefix)
 
     const secret = `${secretKey}` + `${originUrl.substring(4)}`
     const secretToken = crypto.createHash('md5').update(secret).digest('hex')
@@ -21,8 +22,8 @@ export class AuthTokenService {
    * getSecretKey
    * @returns {Promise<string>}
    */
-  static async getSecretKey() {
-    const projectConfig = await configService.LoadConfig()
+  static async getSecretKey(prefix) {
+    const projectConfig = await configService.loadConfig(prefix)
     return assertField(projectConfig, 'secretKey')
   }
 }
