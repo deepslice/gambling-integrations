@@ -6,7 +6,7 @@ const ConfigTypeEnum = {
   SPADES: 'spades',
 }
 
-export class ConfigService {
+class ConfigService {
   private id
   private prefix
   private db
@@ -74,3 +74,5 @@ export class ConfigService {
     return project.id ? project : null
   }
 }
+
+export const configService = new ConfigService()
