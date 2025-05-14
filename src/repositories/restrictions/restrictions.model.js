@@ -1,6 +1,6 @@
 import {databaseConnection} from '#app/infrastructure/database/connection'
 
-export class RestrictionsModel {
+export class RestrictsModel {
 
   constructor(database = databaseConnection) {
     this.database = database
