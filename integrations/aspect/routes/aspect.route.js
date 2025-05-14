@@ -1,7 +1,7 @@
 import express from 'express'
 
 import * as handlers from '../controllers/aspect.controller'
-import {withBetLimitChecks} from 'src/modules/limits/decorators/with-limits-checks.decorator'
+import {withBetLimitChecks} from '#app/modules/limits/wrappers/with-limits-check.wrapper'
 
 const router = express.Router()
 
