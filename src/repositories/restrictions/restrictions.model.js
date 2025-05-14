@@ -1,30 +1,28 @@
 import {databaseConnection} from '#app/infrastructure/database/connection'
 
-export class LimitModel {
+export class RestrictionsModel {
 
   constructor(database = databaseConnection) {
     this.database = database
   }
 
-  async updateLimits(data) {
+  async getRestrictions() {
     await this.database.query(`
-                update casino.limits
-                set bet_limit = bet_limit - ?
-                where project_id = ?
-      `,
+                select ggr * ?                                   as ggr,
+                       if(max_ggr is not null, max_ggr - ggr, 1) as difference
+                from casino.restrictions
+                where code = ?`,
       [
-        data.convertedAmount,
-        data.projectId,
-      ],
-    )
+        data.currencyRate[data.currency] || 1,
+        data.providerUid,
+      ])
   }
 
   async updateRestrictions(data) {
     await this.database.query(`
                 update casino.restrictions
                 set ggr = ggr - ? / ?
-                where code = ?
-      `,
+                where code = ?`,
       [
         data.amount,
         data.currencyRate[data.currency] || 1,
