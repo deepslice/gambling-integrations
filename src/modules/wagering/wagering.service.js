@@ -7,6 +7,38 @@ export class WageringService {
     this.database = database
   }
 
+  async insertWageringTransaction(data) {
+    await this.database.query(`
+                insert into wagering_transactions (wagering_id, user_id, amount, balance_before, balance_after,
+                                                   reference)
+                values (?, ?, ?, ? * ?, ? * ?, concat('cas:', ?))
+      `,
+      [
+        data.wageringBalanceId,
+        data.userId,
+        data.amount,
+        data.balance,
+        data.conversionRate,
+        data.balanceAfter,
+        data.conversionRate,
+        data.trxId,
+      ],
+    )
+  }
+
+  async updateWageringBalance() {
+    await this.database.query(`
+                update wagering_balance
+                set balance = balance + ?
+                where id = ?
+      `,
+      [
+        amount,
+        wageringBalanceId,
+      ],
+    )
+  }
+
   async getWageringBalance(userId, wageringBalanceId, rate) {
     const [[wBalance]] = await this.database.query(`
         select id          as id

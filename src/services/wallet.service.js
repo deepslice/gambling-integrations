@@ -32,7 +32,7 @@ export class WalletService {
     this.wageringService = wageringService
   }
 
-  async transaction(context, userId, gameId, transactionId, amount, isBet = true) {
+  async transaction(context, userId, gameId, roundId, amount, isBet = true) {
     if (amount < 0) {
       throw new Error('Bet amount must be greater than 0')
     }
@@ -147,13 +147,21 @@ export class WalletService {
       action: 'BET',
       amount: user.convertedAmount,
     })
-    
+
     await this.limitRepository.updateRestrictions({
       playerId: user.id,
       gameId: game.uuid,
       action: 'BET',
     })
 
+    // 9. Обновляем баланс пользователя
+    if (context.wageringBalanceId) {
+      // Обновляем игровой баланс пользователя
+      await this.wageringService.updateWageringBalance()
+    } else {
+      // Обновляем реальный баланс пользователя
+      await this.userRepository.updateBalance(user)
+    }
   }
 
   async getBalance(context, userId, gameId) {
