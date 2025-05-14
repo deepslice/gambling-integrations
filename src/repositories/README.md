@@ -1,3 +1,5 @@
 # Storage Design
 
-*ER-diagram will be here soon*
+## Schema Design ERD
+
+![ER-diagram](../../resources/assets/schema-design.svg)
