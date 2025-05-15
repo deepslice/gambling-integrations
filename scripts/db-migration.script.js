@@ -52,7 +52,7 @@ async function main() {
   const [rows] = await connection.query('SELECT name FROM migrations')
   const applied = new Set(rows.map(row => row.name))
 
-  const migrationsDir = path.join(__dirname, '../testdata/db/migrations/seeds') // schemas || seeds
+  const migrationsDir = path.join(__dirname, '../db/migrations/testdata') // schemas || testdata
   const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
 
   if (command === 'up') {
