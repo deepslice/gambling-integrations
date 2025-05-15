@@ -1,4 +1,4 @@
-import {FieldNotFoundError} from './exceptions.util'
+import {FieldNotFoundError} from './exceptions.util.js'
 
 export function assertField(obj, field, context = '') {
   if (obj[field] === undefined) {
