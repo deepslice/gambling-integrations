@@ -2,7 +2,8 @@ import {CurrencyConverterService} from '#app/modules/currency/converter.service'
 import {WageringService} from '#app/modules/wagering/wagering.service'
 
 import {UserModel as UserRepository} from '#app/repositories/user/user.model'
-import {LimitModel as LimitRepository} from '#app/repositories/limit/limit.model'
+import {LimitsModel as LimitRepository} from '#app/repositories/limits/limits.model'
+import {RestrictsModel as RestrictsRepository} from '#app/repositories/restrictions/restrictions.model'
 import {GameModel as GameRepository} from '#app/repositories/game/game.model'
 import {RoundModel as RoundRepository} from '#app/repositories/round/round.model'
 import {TransactionModel as TransactionRepository} from '#app/repositories/transaction/transaction.model'
@@ -20,6 +21,7 @@ export class WalletService {
     roundRepository = new RoundRepository(),
     transactionRepository = new TransactionRepository(),
     limitRepository = new LimitRepository(),
+    restrictsRepository = new RestrictsRepository(),
     currencyService = new CurrencyConverterService(),
     wageringService = new WageringService(),
   ) {
@@ -28,6 +30,7 @@ export class WalletService {
     this.roundRepository = roundRepository
     this.transactionRepository = transactionRepository
     this.limitRepository = limitRepository
+    this.restrictsRepository = restrictsRepository
     this.currencyService = currencyService
     this.wageringService = wageringService
   }
@@ -148,7 +151,7 @@ export class WalletService {
       amount: user.convertedAmount,
     })
 
-    await this.limitRepository.updateRestrictions({
+    await this.restrictsRepository.updateRestrictions({
       playerId: user.id,
       gameId: game.uuid,
       action: 'BET',

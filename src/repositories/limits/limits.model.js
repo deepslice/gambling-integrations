@@ -55,3 +55,5 @@ export class LimitsModel {
     )
   }
 }
+
+export const limitsRepository = new LimitsModel()

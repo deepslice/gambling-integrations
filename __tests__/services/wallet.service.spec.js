@@ -8,7 +8,8 @@ describe('Wallet Service', () => {
   const gameRepositoryMock = {}
   const roundRepositoryMock = {}
   const transactionRepositoryMock = {}
-  const limitRepositoryMock = {}
+  const limitsRepositoryMock = {}
+  const restrictsRepositoryMock = {}
   const currencyServiceMock = {}
   const wageringServiceMock = {}
 
@@ -18,7 +19,8 @@ describe('Wallet Service', () => {
     gameRepositoryMock,
     roundRepositoryMock,
     transactionRepositoryMock,
-    limitRepositoryMock,
+    limitsRepositoryMock,
+    restrictsRepositoryMock,
     currencyServiceMock,
     wageringServiceMock,
   )
@@ -51,23 +53,24 @@ describe('Wallet Service', () => {
     balance: 150,
   }
 
-  userRepositoryMock.getUserInfo = jest.fn(async () => {
+  userRepositoryMock.getUserInfo = jest.fn(async (userId) => {
     return userInfo
   })
 
-  gameRepositoryMock.getGameInfo = jest.fn(async () => {
+  gameRepositoryMock.getGameInfo = jest.fn(async (gameId) => {
     return gameInfo
   })
 
-  currencyServiceMock.getConvertSettings = jest.fn(async () => {
+  currencyServiceMock.getConvertSettings = jest.fn(async (prefix) => {
     return convertSettings
   })
 
-  currencyServiceMock.convert = jest.fn(async () => {
+  currencyServiceMock.convert = jest.fn(async (currency, convertCurrency, amount, prefix) => {
     return userBalance
   })
 
-  wageringServiceMock.getWageringBalance = jest.fn(async () => {
+  wageringServiceMock.getWageringBalance = jest.fn(async (userId, context, convertedBalance,
+  ) => {
     return wageringBalance.balance
   })
 

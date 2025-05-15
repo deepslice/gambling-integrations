@@ -1,11 +1,11 @@
-import {BetLimitService} from '#app/BetLimit/BetLimitService'
+import {LimitsService} from '#app/modules/limits/limits.service'
 
 export function withLimitsChecks(handler) {
   return async (req, res, next) => {
     try {
-      await BetLimitService.checkLimits(req.user.id, req.body.amount, req.params.provider)
-      await BetLimitService.checkBetLimits(req.user.id, req.body.amount, req.params.provider)
-      await BetLimitService.checkRestrictions(req.user.id, req.params.provider)
+      await LimitsService.checkLimits(req.user.id, req.body.amount, req.params.provider)
+      await LimitsService.checkBetLimits(req.user.id, req.body.amount, req.params.provider)
+      await LimitsService.checkRestrictions(req.user.id, req.params.provider)
       return handler(req, res, next)
     } catch (err) {
       next(err)

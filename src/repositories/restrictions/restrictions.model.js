@@ -31,3 +31,5 @@ export class RestrictsModel {
     )
   }
 }
+
+export const restrictionsRepository = new RestrictsModel()
