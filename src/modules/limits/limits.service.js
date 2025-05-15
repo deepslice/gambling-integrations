@@ -1,5 +1,10 @@
 import {LimitsModel} from '#app/repositories/limits/limits.model'
 import {RestrictsModel} from '#app/repositories/restrictions/restrictions.model'
+import {
+  BetLimitExceededError,
+  LimitExceededError,
+  RestrictionExceededError,
+} from '#app/modules/limits/limits.exceptions'
 
 export class LimitService {
 
