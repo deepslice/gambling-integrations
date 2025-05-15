@@ -1,15 +1,11 @@
 import express from 'express'
-import {databaseConnection} from '#app/infrastructure/database/connection'
+
+import apiRoutes from '#app/web/routes/api.routes'
 import walletRoutes from '#app/web/routes/wallet.routes'
-
-// TODO: Make DI Cointainer
-async function bootstrap() {
-  await databaseConnection.connect()
-
-}
 
 const app = express()
 
+app.use('/api/v1/api', apiRoutes)
 app.use('/api/v1/wallet', walletRoutes)
 
 app.use(express.json())
