@@ -2,9 +2,25 @@ import {readdirSync, readFileSync, writeFileSync} from 'node:fs'
 import {Readable} from 'node:stream'
 import path from 'path'
 
-const SourceDir = 'testdata/db/migrations/schemas'
-const OutputDir = 'testdata/db/migrations/seeds'
-const RowsPerTable = 5
+const rowsPerTable = 5
+
+const sourceDir1 = 'db/migrations/0003-schemas/0001-global'
+const sourceDir2 = 'db/migrations/0003-schemas/0002-casino'
+const sourceDir3 = 'db/migrations/0003-schemas/0003-local'
+const sourceDirs = [
+  sourceDir1,
+  sourceDir2,
+  sourceDir3,
+]
+
+const outputDir1 = 'db/testdata/0001-global'
+const outputDir2 = 'db/testdata/0002-casino'
+const outputDir3 = 'db/testdata/0003-local'
+const outputDirs = [
+  outputDir1,
+  outputDir2,
+  outputDir3,
+]
 
 // Глобальное хранилище для PK родительских таблиц
 let parentReferences = new Map()
@@ -132,18 +148,19 @@ function generateValue(columnType, columnName, isPrimary = false, isUnique = fal
 
 function parseColumns(sqlContent) {
   const lines = sqlContent.split('\n')
+
   let tableName = null
   const columns = []
-  const primaryKeys = new Set()
-  const uniques = new Set()
-  let inCreateTable = false
 
+  const primaryKeys = new Set()
+  const uniqueKeys = new Set()
+
+  let inCreateTable = false
   for (const line of lines) {
     const trimmedLine = line.trim().replace(/,$/, '')
-
     if (trimmedLine.toLowerCase().startsWith('create table')) {
       inCreateTable = true
-      const match = /create table\s+`?(\w+)`?/i.exec(trimmedLine)
+      const match = /create table\s+`?([\w.]+)`?/i.exec(trimmedLine)
       if (match) tableName = match[1]
     } else if (inCreateTable && trimmedLine.startsWith(')')) {
       break
@@ -153,7 +170,6 @@ function parseColumns(sqlContent) {
         const complexPk = trimmedLine.match(/PRIMARY\s+KEY\s+\(([^)]+)\)/i) || []
         if (complexPk.length > 0) {
           const keys = complexPk[1].split(',')
-          //console.log('complexPk:', keys)
           keys.forEach(key => primaryKeys.add(key.replace(/`/g, '').toLowerCase()))
         } else {
           const keys = trimmedLine.match(/`?(\w+)`?/g) || []
@@ -165,11 +181,10 @@ function parseColumns(sqlContent) {
         const complexUnique = trimmedLine.match(/PRIMARY\s+KEY\s+\(([^)]+)\)/i) || []
         if (complexUnique.length > 0) {
           const keys = complexUnique[1].split(',')
-          //console.log('complexUnique:', keys)
-          keys.forEach(key => uniques.add(key.replace(/`/g, '').toLowerCase()))
+          keys.forEach(key => uniqueKeys.add(key.replace(/`/g, '').toLowerCase()))
         } else {
           const keys = trimmedLine.match(/`?(\w+)`?/g) || []
-          keys.forEach(key => uniques.add(key.replace(/`/g, '').toLowerCase()))
+          keys.forEach(key => uniqueKeys.add(key.replace(/`/g, '').toLowerCase()))
         }
       }
 
@@ -179,8 +194,7 @@ function parseColumns(sqlContent) {
           const colName = match[1]
           const colType = match[2]
           const isPrimary = primaryKeys.has(colName.toLowerCase())
-          const isUnique = uniques.has(colName.toLowerCase())
-          //console.log('test:', [colName, colType, isPrimary, isUnique])
+          const isUnique = uniqueKeys.has(colName.toLowerCase())
           columns.push([colName, colType, isPrimary, isUnique])
         }
       }
@@ -190,6 +204,7 @@ function parseColumns(sqlContent) {
   if (!tableName) throw new Error('Table name not found')
 
   const references = parseReferences(sqlContent)
+
   return {tableName, columns, references}
 }
 
@@ -197,11 +212,11 @@ function generateInsert(table, columns, references) {
   const colNames = columns.map(col => `\`${col[0]}\``).join(', ')
   const valuesList = []
 
-  const temproraryRefs = new Map()
+  const temporaryRefs = new Map()
   const usedPrimaryValues = new Set()
   const usedUniqueValues = new Set()
 
-  for (let i = 0; i < RowsPerTable; i++) {
+  for (let i = 0; i < rowsPerTable; i++) {
     const rowValues = []
 
     // Затем остальные столбцы
@@ -232,12 +247,12 @@ function generateInsert(table, columns, references) {
       }
 
       if (isPrimary || isUnique) {
-        if (!temproraryRefs.has(`${table}:${columnName}`)) {
-          temproraryRefs.set(`${table}:${columnName}`, new Set([value]))
+        if (!temporaryRefs.has(`${table}:${columnName}`)) {
+          temporaryRefs.set(`${table}:${columnName}`, new Set([value]))
         } else {
-          const currRefs = temproraryRefs.get(`${table}:${columnName}`)
+          const currRefs = temporaryRefs.get(`${table}:${columnName}`)
           currRefs.add(value)
-          temproraryRefs.set(`${table}:${columnName}`, new Set([...currRefs]))
+          temporaryRefs.set(`${table}:${columnName}`, new Set([...currRefs]))
         }
       }
     }
@@ -246,7 +261,7 @@ function generateInsert(table, columns, references) {
                      VALUES (${rowValues.join(', ')});`)
   }
 
-  temproraryRefs.forEach((refs, key) => {
+  temporaryRefs.forEach((refs, key) => {
     parentReferences.set(key, refs)
   })
 
@@ -273,18 +288,18 @@ function parseReferences(sqlContent) {
 }
 
 function main() {
-  const stream = Readable.from(readdirSync(SourceDir))
+  const stream = Readable.from(readdirSync(sourceDirs[2]))
   stream.on('data', async (file) => {
     if (file.endsWith('.sql')) {
       try {
-        const content = readFileSync(path.join(SourceDir, file), 'utf8')
+        const content = readFileSync(path.join(sourceDirs[2], file), 'utf8')
         const {tableName, columns, references} = parseColumns(content)
         // console.log('references:', tableName, references)
         const seedSql = generateInsert(tableName, columns, references)
 
         const filenameBase = path.parse(file).name
         const outputFilename = `${filenameBase}_seed.sql`
-        const outputPath = path.join(OutputDir, outputFilename)
+        const outputPath = path.join(outputDirs[2], outputFilename)
 
         const outputContent = `-- +++ UP +++\n${seedSql}\n-- +++ DOWN +++\n\n`
         await writeFileSync(outputPath, outputContent, 'utf8')

@@ -1,13 +1,13 @@
 -- +++ UP +++
 INSERT INTO `users` (`id`, `uid`, `segment`, `username`, `password`, `email`, `phone`, `birth`, `balance`, `real_balance`, `plus_bonus`, `bonus`, `currency`, `active`, `verified`, `deleted`, `test`, `agent_id`, `sign_in_version`, `created_at`, `options`)
-                     VALUES (539, '963', '60', 'username_1', 'password_4', 'email_1', 'phone_1', '2025-05-09', '3.25', '50.85', '98.96', '31.82', 'cu_65', '147', '86', '93', '50', '323', '512', '2025-05-09 12:37:40', '{}');
+                     VALUES (8070, '857', '51', 'username_45', 'password_59', 'email_4', 'phone_80', '2025-05-16', '84.78', '38.05', '60.85', '89.22', 'cu_65', '918', '41', '92', '81', '360', '583', '2025-05-16 13:44:02', '{}');
 INSERT INTO `users` (`id`, `uid`, `segment`, `username`, `password`, `email`, `phone`, `birth`, `balance`, `real_balance`, `plus_bonus`, `bonus`, `currency`, `active`, `verified`, `deleted`, `test`, `agent_id`, `sign_in_version`, `created_at`, `options`)
-                     VALUES (7666, '441', '35', 'username_2', 'password_58', 'email_2', 'phone_2', '2025-05-09', '38.10', '53.21', '87.05', '18.16', 'cu_24', '880', '88', '29', '68', '2570', '945', '2025-05-09 12:37:40', '{}');
+                     VALUES (8117, '728', '9', 'username_61', 'password_19', 'email_15', 'phone_55', '2025-05-16', '1.60', '8.81', '47.80', '63.54', 'cu_75', '171', '83', '53', '38', '983', '989', '2025-05-16 13:44:02', '{}');
 INSERT INTO `users` (`id`, `uid`, `segment`, `username`, `password`, `email`, `phone`, `birth`, `balance`, `real_balance`, `plus_bonus`, `bonus`, `currency`, `active`, `verified`, `deleted`, `test`, `agent_id`, `sign_in_version`, `created_at`, `options`)
-                     VALUES (7959, '304', '74', 'username_3', 'password_20', 'email_3', 'phone_3', '2025-05-09', '15.66', '2.44', '78.15', '30.29', 'cu_62', '817', '49', '95', '40', '4144', '486', '2025-05-09 12:37:40', '{}');
+                     VALUES (966, '796', '27', 'username_89', 'password_32', 'email_59', 'phone_5', '2025-05-16', '4.00', '50.09', '74.63', '69.95', 'cur_8', '921', '76', '70', '23', '141', '430', '2025-05-16 13:44:02', '{}');
 INSERT INTO `users` (`id`, `uid`, `segment`, `username`, `password`, `email`, `phone`, `birth`, `balance`, `real_balance`, `plus_bonus`, `bonus`, `currency`, `active`, `verified`, `deleted`, `test`, `agent_id`, `sign_in_version`, `created_at`, `options`)
-                     VALUES (5916, '665', '7', 'username_4', 'password_23', 'email_4', 'phone_4', '2025-05-09', '96.59', '85.85', '77.31', '43.96', 'cu_83', '880', '54', '30', '16', '567', '236', '2025-05-09 12:37:40', '{}');
+                     VALUES (5674, '573', '26', 'username_45', 'password_1', 'email_13', 'phone_49', '2025-05-16', '69.72', '51.99', '26.23', '18.17', 'cu_26', '648', '11', '60', '53', '264', '843', '2025-05-16 13:44:02', '{}');
 INSERT INTO `users` (`id`, `uid`, `segment`, `username`, `password`, `email`, `phone`, `birth`, `balance`, `real_balance`, `plus_bonus`, `bonus`, `currency`, `active`, `verified`, `deleted`, `test`, `agent_id`, `sign_in_version`, `created_at`, `options`)
-                     VALUES (1464, '100', '10', 'username_5', 'password_4', 'email_5', 'phone_5', '2025-05-09', '25.87', '70.69', '76.13', '41.99', 'cu_51', '580', '2', '88', '39', '2216', '484', '2025-05-09 12:37:40', '{}');
+                     VALUES (960, '866', '69', 'username_8', 'password_92', 'email_37', 'phone_88', '2025-05-16', '81.87', '47.89', '4.88', '60.65', 'cu_74', '509', '11', '34', '91', '679', '904', '2025-05-16 13:44:02', '{}');
 -- +++ DOWN +++
 

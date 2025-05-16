@@ -1,13 +1,13 @@
 -- +++ UP +++
 INSERT INTO `casino_convert_settings` (`prefix`, `aggregator`, `provider`, `currency`)
-                     VALUES ('prefi_10', 'aggregator_70', 'provider_17', 'cu_42');
+VALUES ('prefi_64', 'aggregator_92', 'provider_86', 'cu_53');
 INSERT INTO `casino_convert_settings` (`prefix`, `aggregator`, `provider`, `currency`)
-                     VALUES ('prefi_54', 'aggregator_1', 'provider_60', 'cu_23');
+VALUES ('prefi_37', 'aggregator_35', 'provider_11', 'cu_50');
 INSERT INTO `casino_convert_settings` (`prefix`, `aggregator`, `provider`, `currency`)
-                     VALUES ('prefi_57', 'aggregator_50', 'provider_100', 'cu_66');
+VALUES ('prefi_80', 'aggregator_65', 'provider_39', 'cu_67');
 INSERT INTO `casino_convert_settings` (`prefix`, `aggregator`, `provider`, `currency`)
-                     VALUES ('prefi_74', 'aggregator_47', 'provider_71', 'cu_21');
+VALUES ('prefi_60', 'aggregator_12', 'provider_58', 'cu_51');
 INSERT INTO `casino_convert_settings` (`prefix`, `aggregator`, `provider`, `currency`)
-                     VALUES ('prefi_81', 'aggregator_64', 'provider_14', 'cu_10');
+VALUES ('prefi_44', 'aggregator_64', 'provider_13', 'cu_94');
 -- +++ DOWN +++
 

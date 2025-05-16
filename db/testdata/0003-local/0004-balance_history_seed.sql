@@ -1,13 +1,13 @@
 -- +++ UP +++
 INSERT INTO `balance_history` (`id`, `user_id`, `type`, `amount`, `balance`, `info`, `created_at`)
-                     VALUES (5902, '539', '78', '52.49', '{}', '{}', '2025-05-09 12:37:40');
+                     VALUES ('649', '8070', '3', '15.66', '{}', '{}', '2025-05-16 13:44:02');
 INSERT INTO `balance_history` (`id`, `user_id`, `type`, `amount`, `balance`, `info`, `created_at`)
-                     VALUES (4877, '7666', '67', '52.20', '{}', '{}', '2025-05-09 12:37:40');
+                     VALUES ('430', '8117', '12', '64.53', '{}', '{}', '2025-05-16 13:44:02');
 INSERT INTO `balance_history` (`id`, `user_id`, `type`, `amount`, `balance`, `info`, `created_at`)
-                     VALUES (8150, '7959', '58', '39.22', '{}', '{}', '2025-05-09 12:37:40');
+                     VALUES ('863', '966', '63', '77.37', '{}', '{}', '2025-05-16 13:44:02');
 INSERT INTO `balance_history` (`id`, `user_id`, `type`, `amount`, `balance`, `info`, `created_at`)
-                     VALUES (146, '5916', '28', '66.62', '{}', '{}', '2025-05-09 12:37:40');
+                     VALUES ('740', '5674', '73', '47.10', '{}', '{}', '2025-05-16 13:44:02');
 INSERT INTO `balance_history` (`id`, `user_id`, `type`, `amount`, `balance`, `info`, `created_at`)
-                     VALUES (5252, '1464', '48', '10.25', '{}', '{}', '2025-05-09 12:37:40');
+                     VALUES ('640', '960', '60', '61.64', '{}', '{}', '2025-05-16 13:44:02');
 -- +++ DOWN +++
 

@@ -1,13 +1,13 @@
 -- +++ UP +++
 INSERT INTO `casino_rounds` (`id`, `bet_amount`, `win_amount`, `round_id`, `user_id`, `aggregator`, `provider`, `uuid`, `currency`, `session_id`, `created_at`, `updated_at`, `additional_info`, `status`)
-                     VALUES (7864, '27.97', '11.15', 'round_id_1', '539', 'aggregator_71', 'provider_83', 'uuid_4', 'curre_93', 'session_id_90', '2025-05-09 12:37:40', '2025-05-09 12:37:40', '{}', '2');
+                     VALUES ('928', '2.75', '99.68', 'round_id_100', '172', 'aggregator_6', 'provider_73', 'uuid_96', 'curren_9', 'session_id_93', '2025-05-16 13:44:02', '2025-05-16 13:44:02', '{}', '97');
 INSERT INTO `casino_rounds` (`id`, `bet_amount`, `win_amount`, `round_id`, `user_id`, `aggregator`, `provider`, `uuid`, `currency`, `session_id`, `created_at`, `updated_at`, `additional_info`, `status`)
-                     VALUES (9181, '95.86', '99.26', 'round_id_2', '7666', 'aggregator_29', 'provider_57', 'uuid_94', 'curre_49', 'session_id_31', '2025-05-09 12:37:40', '2025-05-09 12:37:40', '{}', '85');
+                     VALUES ('894', '47.95', '64.52', 'round_id_50', '299', 'aggregator_55', 'provider_33', 'uuid_5', 'curre_84', 'session_id_83', '2025-05-16 13:44:02', '2025-05-16 13:44:02', '{}', '62');
 INSERT INTO `casino_rounds` (`id`, `bet_amount`, `win_amount`, `round_id`, `user_id`, `aggregator`, `provider`, `uuid`, `currency`, `session_id`, `created_at`, `updated_at`, `additional_info`, `status`)
-                     VALUES (4765, '41.61', '90.85', 'round_id_3', '7959', 'aggregator_90', 'provider_76', 'uuid_60', 'curren_6', 'session_id_13', '2025-05-09 12:37:40', '2025-05-09 12:37:40', '{}', '98');
+                     VALUES ('340', '89.20', '68.20', 'round_id_22', '550', 'aggregator_82', 'provider_34', 'uuid_23', 'curre_20', 'session_id_81', '2025-05-16 13:44:02', '2025-05-16 13:44:02', '{}', '83');
 INSERT INTO `casino_rounds` (`id`, `bet_amount`, `win_amount`, `round_id`, `user_id`, `aggregator`, `provider`, `uuid`, `currency`, `session_id`, `created_at`, `updated_at`, `additional_info`, `status`)
-                     VALUES (3950, '89.13', '60.64', 'round_id_4', '5916', 'aggregator_21', 'provider_75', 'uuid_64', 'curre_43', 'session_id_34', '2025-05-09 12:37:40', '2025-05-09 12:37:40', '{}', '85');
+                     VALUES ('38', '28.23', '88.91', 'round_id_71', '633', 'aggregator_87', 'provider_10', 'uuid_73', 'curre_45', 'session_id_92', '2025-05-16 13:44:02', '2025-05-16 13:44:02', '{}', '19');
 INSERT INTO `casino_rounds` (`id`, `bet_amount`, `win_amount`, `round_id`, `user_id`, `aggregator`, `provider`, `uuid`, `currency`, `session_id`, `created_at`, `updated_at`, `additional_info`, `status`)
-                     VALUES (5932, '25.22', '94.78', 'round_id_5', '1464', 'aggregator_72', 'provider_24', 'uuid_37', 'curre_77', 'session_id_39', '2025-05-09 12:37:40', '2025-05-09 12:37:40', '{}', '15');
+                     VALUES ('546', '58.25', '87.38', 'round_id_85', '35', 'aggregator_84', 'provider_42', 'uuid_48', 'curre_96', 'session_id_20', '2025-05-16 13:44:02', '2025-05-16 13:44:02', '{}', '99');
 -- +++ DOWN +++
 

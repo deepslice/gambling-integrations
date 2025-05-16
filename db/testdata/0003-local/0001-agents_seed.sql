@@ -1,13 +1,13 @@
 -- +++ UP +++
 INSERT INTO `agents` (`id`, `agent_id`, `username`, `balance`, `cash_balance`, `active`, `deleted`, `test`, `sign_in_version`, `password`, `role`, `options`, `created_at`, `aff_active`, `aff_transfer`, `is_affiliate`)
-                     VALUES (323, '157', 'username_1', '64.75', '71.82', '844', '5', '9', '515', 'password_31', '526', '{}', '2025-05-09 12:37:40', '59', '64.28', '81');
+                     VALUES ('991', '562', 'username_69', '53.61', '85.03', '419', '62', '41', '963', 'password_77', '694', '{}', '2025-05-16 13:44:02', '50', '14.62', '73');
 INSERT INTO `agents` (`id`, `agent_id`, `username`, `balance`, `cash_balance`, `active`, `deleted`, `test`, `sign_in_version`, `password`, `role`, `options`, `created_at`, `aff_active`, `aff_transfer`, `is_affiliate`)
-                     VALUES (2570, '430', 'username_2', '86.10', '19.00', '718', '60', '97', '590', 'password_67', '384', '{}', '2025-05-09 12:37:40', '52', '13.86', '9');
+                     VALUES ('16', '691', 'username_29', '92.07', '82.43', '310', '20', '94', '830', 'password_33', '59', '{}', '2025-05-16 13:44:02', '31', '96.03', '63');
 INSERT INTO `agents` (`id`, `agent_id`, `username`, `balance`, `cash_balance`, `active`, `deleted`, `test`, `sign_in_version`, `password`, `role`, `options`, `created_at`, `aff_active`, `aff_transfer`, `is_affiliate`)
-                     VALUES (4144, '311', 'username_3', '6.41', '70.00', '821', '10', '83', '960', 'password_11', '616', '{}', '2025-05-09 12:37:40', '79', '97.68', '62');
+                     VALUES ('968', '802', 'username_83', '66.40', '57.54', '163', '81', '42', '71', 'password_32', '186', '{}', '2025-05-16 13:44:02', '88', '80.92', '21');
 INSERT INTO `agents` (`id`, `agent_id`, `username`, `balance`, `cash_balance`, `active`, `deleted`, `test`, `sign_in_version`, `password`, `role`, `options`, `created_at`, `aff_active`, `aff_transfer`, `is_affiliate`)
-                     VALUES (567, '676', 'username_4', '80.81', '37.09', '90', '25', '87', '615', 'password_79', '144', '{}', '2025-05-09 12:37:40', '57', '26.26', '40');
+                     VALUES ('787', '299', 'username_75', '8.82', '91.62', '429', '23', '70', '634', 'password_8', '370', '{}', '2025-05-16 13:44:02', '77', '98.79', '22');
 INSERT INTO `agents` (`id`, `agent_id`, `username`, `balance`, `cash_balance`, `active`, `deleted`, `test`, `sign_in_version`, `password`, `role`, `options`, `created_at`, `aff_active`, `aff_transfer`, `is_affiliate`)
-                     VALUES (2216, '766', 'username_5', '33.34', '47.76', '793', '57', '68', '787', 'password_10', '724', '{}', '2025-05-09 12:37:40', '29', '68.77', '61');
+                     VALUES ('323', '511', 'username_39', '66.68', '33.54', '488', '34', '83', '576', 'password_46', '39', '{}', '2025-05-16 13:44:02', '55', '40.41', '82');
 -- +++ DOWN +++
 

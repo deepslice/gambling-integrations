@@ -3,10 +3,18 @@ import path from 'node:path'
 
 import {databaseConnection} from '#app/infrastructure/database/connection'
 
-const sourceDir1 = 'db/migrations/0001-privileges'
-const sourceDir2 = 'db/migrations/0002-databases'
-const sourceDir3 = 'db/migrations/0003-schemas'
+// const sourceDir1 = 'db/migrations/0001-privileges'
+// const sourceDir2 = 'db/migrations/0002-databases'
+// const sourceDir3 = 'db/migrations/0003-schemas'
+// const sourceDirs = [
+//   sourceDir1,
+//   sourceDir2,
+//   sourceDir3,
+// ]
 
+const sourceDir1 = 'db/testdata/0001-global'
+const sourceDir2 = 'db/testdata/0002-casino'
+const sourceDir3 = 'db/testdata/0003-local'
 const sourceDirs = [
   sourceDir1,
   sourceDir2,
@@ -34,7 +42,7 @@ async function main() {
     host: 'localhost',
     port: 3306,
     user: 'root',
-    database: 'mydb',
+    database: 'global',
     password: 'root',
     multipleStatements: true,
     waitForConnections: true,
@@ -42,24 +50,25 @@ async function main() {
   })
 
   const connection = await databaseConnection.getConnection()
-  await connection.query(`
-      create table IF NOT EXISTS migrations
-      (
-          id
-          INT
-          AUTO_INCREMENT
-          PRIMARY
-          KEY,
-          name
-          VARCHAR
-      (
-          255
-      ) NOT NULL,
-          run_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          );
-  `)
+  // await connection.query(`
+  //     create table IF NOT EXISTS migrations
+  //     (
+  //         id
+  //         INT
+  //         AUTO_INCREMENT
+  //         PRIMARY
+  //         KEY,
+  //         name
+  //         VARCHAR
+  //     (
+  //         255
+  //     ) NOT NULL,
+  //         run_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  //         );
+  // `)
+  //
 
-  const [rows] = await connection.query('SELECT name FROM migrations')
+  const [rows] = await connection.query('SELECT name FROM mydb.migrations')
   const applied = new Set(rows.map(row => row.name))
   connection.release()
 
@@ -81,7 +90,7 @@ async function main() {
               await connection.beginTransaction()
               await connection.query(up)
               await connection.query(`
-                          INSERT INTO migrations (name)
+                          INSERT INTO mydb.migrations (name)
                           VALUES (?)`,
                 [file])
               await connection.commit()
@@ -98,7 +107,7 @@ async function main() {
   }
 
   if (command === 'up') {
-    await walkDirAndMigrate(sourceDirs[2])
+    await walkDirAndMigrate(sourceDirs[0])
     console.log('✅ All migrations applied.')
   }
 }
