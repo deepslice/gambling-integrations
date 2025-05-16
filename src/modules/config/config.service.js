@@ -1,4 +1,4 @@
-import {databaseConnection} from '#app/infrastructure/database/connection'
+import {Container} from '#app/dependencies/container.deps'
 
 const ConfigTypeEnum = {
   ASPECT: 'aspect',
@@ -6,7 +6,7 @@ const ConfigTypeEnum = {
 }
 
 class ConfigService {
-  constructor(configType = ConfigTypeEnum.ASPECT, database = databaseConnection) {
+  constructor(configType = ConfigTypeEnum.ASPECT, database = new Container().database) {
     this.database = database
     this.configType = configType
   }

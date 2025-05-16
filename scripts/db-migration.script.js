@@ -1,11 +1,17 @@
-import mysql from 'mysql2/promise'
-import fs from 'fs'
-import path from 'path'
-import {fileURLToPath} from 'url'
+import fs, {readdirSync, statSync} from 'node:fs'
+import path from 'node:path'
 
-// Чтобы работать с __dirname в ESM:
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import {databaseConnection} from '#app/infrastructure/database/connection'
+
+const sourceDir1 = 'db/migrations/0001-privileges'
+const sourceDir2 = 'db/migrations/0002-databases'
+const sourceDir3 = 'db/migrations/0003-schemas'
+
+const sourceDirs = [
+  sourceDir1,
+  sourceDir2,
+  sourceDir3,
+]
 
 async function parseSqlFile(filepath) {
   const content = fs.readFileSync(filepath, 'utf-8')
@@ -21,19 +27,23 @@ async function parseSqlFile(filepath) {
 }
 
 async function main() {
-  const args = process.argv.slice(2)
-  const command = args[0]
+  const args = process.argv.slice(0)
+  const command = args[2]
 
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+  await databaseConnection.connect({
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    database: 'mydb',
+    password: 'root',
     multipleStatements: true,
+    waitForConnections: true,
+    connectionLimit: 5,
   })
 
+  const connection = await databaseConnection.getConnection()
   await connection.query(`
-      CREATE TABLE IF NOT EXISTS migrations
+      create table IF NOT EXISTS migrations
       (
           id
           INT
@@ -51,43 +61,46 @@ async function main() {
 
   const [rows] = await connection.query('SELECT name FROM migrations')
   const applied = new Set(rows.map(row => row.name))
+  connection.release()
 
-  const migrationsDir = path.join(__dirname, '../db/migrations/testdata') // schemas || testdata
-  const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
-
-  if (command === 'up') {
+  const walkDirAndMigrate = async (dir) => {
+    const files = readdirSync(dir)
     for (const file of files) {
-      if (!applied.has(file)) {
-        const {up} = await parseSqlFile(path.join(migrationsDir, file))
-        console.log(`Applying migration: ${path.join(migrationsDir, file)}`)
-        console.log('up:', up)
-        await connection.query(up)
-        await connection.query(`INSERT INTO migrations (name)
-                                VALUES (?)`, [file])
+      const fullPath = path.join(dir, file)
+      const stats = statSync(fullPath)
+      if (stats.isDirectory()) {
+        await walkDirAndMigrate(fullPath)
+      } else {
+        if (file.endsWith('.sql')) {
+          if (!applied.has(file)) {
+            const {up} = await parseSqlFile(fullPath)
+            console.log(`Applying migration: ${fullPath}`)
+
+            const connection = await databaseConnection.getConnection()
+            try {
+              await connection.beginTransaction()
+              await connection.query(up)
+              await connection.query(`
+                          INSERT INTO migrations (name)
+                          VALUES (?)`,
+                [file])
+              await connection.commit()
+            } catch (e) {
+              await connection.rollback()
+              throw new Error('Error applying migration: ' + file + '\n' + e.message)
+            } finally {
+              connection.release()
+            }
+          }
+        }
       }
     }
-    console.log('✅ All migrations applied.')
-  } else if (command === 'down') {
-    const lastMigration = [...applied].sort().pop()
-    if (!lastMigration) {
-      console.log('No migrations to roll back.')
-      return
-    }
-    const {down} = await parseSqlFile(path.join(migrationsDir, lastMigration))
-    if (!down) {
-      console.log(`Migration ${lastMigration} has no DOWN section.`)
-      return
-    }
-    console.log(`Rolling back migration: ${lastMigration}`)
-    await connection.query(down)
-    await connection.query(`DELETE
-                            FROM migrations
-                            WHERE name = ?`, [lastMigration])
-  } else {
-    console.log('Usage: node migrate.js up|down')
   }
 
-  await connection.end()
+  if (command === 'up') {
+    await walkDirAndMigrate(sourceDirs[2])
+    console.log('✅ All migrations applied.')
+  }
 }
 
 main().catch(err => {

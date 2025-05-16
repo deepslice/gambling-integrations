@@ -6,7 +6,8 @@ export class ApiController {
     this.apiService = apiService
   }
 
-  async gameInit(req, res) {
+  gameInit = async (req, res) => {
+    console.log('body:', req.body)
     return await this.apiService.gameInit(req.body)
   }
 }

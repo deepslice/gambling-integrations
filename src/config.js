@@ -1,13 +1,13 @@
-class AppConfig {
+export class AppConfig {
   constructor() {
-    this.host = 'localhost' || process.env.APP_HOST
-    this.port = 3000 || process.env.APP_PORT
-    this.dbHost = 'localhost' || process.env.DB_HOST
-    this.dbPort = 3306 || process.env.DB_PORT
-    this.dbName = 'dbName' || process.env.DB_NAME
-    this.dbUser = 'dbUser' || process.env.DB_USER
-    this.dbPassword = 'dbPassword' || process.env.DB_PASSWORD
-    this.dbSsl = 'false' || process.env.DB_SSL
+    this.host = process.env.APP_HOST || 'localhost'
+    this.port = process.env.APP_PORT || 3000
+    this.dbHost = process.env.DB_HOST || 'localhost'
+    this.dbPort = process.env.DB_PORT || 3306
+    // this.dbName = process.env.DB_NAME || 'dbName'
+    this.dbUser = process.env.DB_USER || 'dbUser'
+    this.dbPassword = process.env.DB_PASSWORD || 'dbPassword'
+    this.dbSsl = process.env.DB_SSL || 'false'
   }
 }
 

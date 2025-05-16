@@ -9,9 +9,9 @@ class MySQLConnection {
     this.connectionListeners = []
   }
 
-  async connect() {
+  async connect(dbConfig) {
     try {
-      this.pool = mysql.createPool(mysqlConfig)
+      this.pool = mysql.createPool(dbConfig)
       this.isConnected = true
       this.reconnectAttempts = 0
 
