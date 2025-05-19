@@ -2,6 +2,7 @@
 import {databaseConnection} from 'core-infra/database/connection.js'
 
 const defaultCardinality = 5
+const references = new Map()
 
 /**
  * orderByReference
@@ -192,31 +193,31 @@ export async function getDbms() {
 /**
  * bake
  * @param items
- * @returns {Promise<void>}
+ * @returns {*[]}
  */
-export async function bake(items) {
+export function bake(items) {
   const result = []
-  const references = new Map()
 
   // const columnNames = items.map(i => `\`${i.columnName}\``).join(', ')
-  const {tableName} = items[0]
 
   for (const item of items) {
-    if (item.tableName !== tableName) {
-      break
-    }
+    let itemValues = unpackMultiplicity(item)
+
+    items.filter(i =>
+      i.referencedTableSchema === item.tableSchema &&
+      i.referencedTableName === item.tableName &&
+      i.referencedColumn === item.columnName)
+      .forEach(i => references.set(
+        `${i.referencedTableSchema}:${i.referencedTableName}:${i.referencedColumn}`,
+        itemValues,
+      ))
 
     const {
       referencedTableSchema,
       referencedTableName,
-      referencedColumnName,
+      referencedColumn,
     } = item
-
-    const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumnName}`
-
-    let itemValues = unpackMultiplicity(item)
-    items.filter(i => i.referencedTableName === item.tableName)
-      .forEach(i => references.set(referenceKey, itemValues))
+    const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumn}`
 
     if (hasReferenced(item)) {
       itemValues = references.get(referenceKey)
@@ -247,31 +248,30 @@ async function main() {
     connectionLimit: 5,
   })
 
-  const connection = await databaseConnection.getConnection()
-  await connection.beginTransaction()
-
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
     const items = orderByReference(rows)
 
+    // const result = []
+    // const tableItems = []
+    //
+    // let tableName = items[0].tableName
+    // for (let i = 0; i < items.length; i++) {
+    //   tableItems.push(items[i])
+    //
+    //   if (items[i + 1].tableName !== tableName) {
+    //     const food = await bake(tableItems)
+    //     result.push(food)
+    //
+    //     tableName = items[i + 1].tableName
+    //   }
+    // }
 
-    const result = []
-    const tableItems = []
+    return bake(items)
 
-    let tableName = items[0].tableName
-    for (let i = 0; i < items.length; i++) {
-      tableItems.push(items[i])
-
-      if (items[i + 1].tableName !== tableName) {
-        const food = await bake(tableItems)
-        result.push(food)
-
-        tableName = items[i + 1].tableName
-      }
-    }
-
-    return result
-
+    // const connection = await databaseConnection.getConnection()
+    // await connection.beginTransaction()
+    //
     // try {
     //   await connection.query(food)
     //   await connection.commit()
