@@ -1,6 +1,5 @@
 // src/main.js
 import {databaseConnection} from 'core-infra/database/connection.js'
-import {bake} from '#foodb/foodb'
 
 const defaultCardinality = 5
 
@@ -49,7 +48,6 @@ export function splitByTable(items) {
 /**
  * unpackMultiplicity
  * @param item
- * @param isUnique
  * @param cardinality
  * @returns {[]}
  */
@@ -154,7 +152,6 @@ export function generateItemValue(item) {
  */
 export async function getDbms() {
   const connection = await databaseConnection.getConnection()
-
   try {
     const [rows] = await connection.query(`SELECT 'mysql'                       dbms,
                                                   t.TABLE_SCHEMA             as tableSchema,
@@ -198,18 +195,23 @@ export async function getDbms() {
  * @returns {Promise<void>}
  */
 export async function bake(items) {
-  const connection = await databaseConnection.getConnection()
-  await connection.beginTransaction()
+  const result = []
+  const references = new Map()
 
-  const columnNames = items.map(i => `\`${i.columnName}\``).join(', ')
-  const references = Map()
+  // const columnNames = items.map(i => `\`${i.columnName}\``).join(', ')
+  const {tableName} = items[0]
 
   for (const item of items) {
+    if (item.tableName !== tableName) {
+      break
+    }
+
     const {
       referencedTableSchema,
       referencedTableName,
       referencedColumnName,
     } = item
+
     const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumnName}`
 
     let itemValues = unpackMultiplicity(item)
@@ -220,19 +222,14 @@ export async function bake(items) {
       itemValues = references.get(referenceKey)
     }
 
-    try {
-      await connection.query(
-        `INSERT INTO ${item.tableSchema}.${item.tableName} (${columnNames})
-         VALUES ?`,
-        [itemValues],
-      )
-      await connection.commit()
-    } catch (e) {
-      await connection.rollback()
-    } finally {
-      await connection.release()
-    }
+    result.push(itemValues)
   }
+
+  return transpose(result)
+}
+
+const transpose = (matrix) => {
+  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]))
 }
 
 async function main() {
@@ -250,10 +247,39 @@ async function main() {
     connectionLimit: 5,
   })
 
+  const connection = await databaseConnection.getConnection()
+  await connection.beginTransaction()
+
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
     const items = orderByReference(rows)
-    await bake(items)
+
+
+    const result = []
+    const tableItems = []
+
+    let tableName = items[0].tableName
+    for (let i = 0; i < items.length; i++) {
+      tableItems.push(items[i])
+
+      if (items[i + 1].tableName !== tableName) {
+        const food = await bake(tableItems)
+        result.push(food)
+
+        tableName = items[i + 1].tableName
+      }
+    }
+
+    return result
+
+    // try {
+    //   await connection.query(food)
+    //   await connection.commit()
+    // } catch (e) {
+    //   await connection.rollback()
+    // } finally {
+    //   await connection.release()
+    // }
   }
 
   if (command === 'help') {
