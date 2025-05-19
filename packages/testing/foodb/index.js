@@ -237,9 +237,38 @@ export function bake(items) {
   return result
 }
 
-// const transpose = (matrix) => {
-//   return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]))
-// }
+/**
+ * insertData
+ * @param tables
+ * @returns {Promise<void>}
+ */
+async function insertData(tables) {
+  // Выполняем вставку для каждой таблицы
+  for (const key in tables) {
+    const table = tables[key]
+    if (table.values.length === 0) continue
+
+    try {
+      const connection = await databaseConnection.getConnection()
+
+      // Создаем SQL запрос
+      const columns = table.columns.map(col => `\`${col}\``).join(', ')
+      const placeholders = table.columns.map(() => '?').join(', ')
+      const sql = `INSERT INTO \`${table.schema}\`.\`${table.name}\` (${columns})
+                   VALUES (${placeholders})`
+
+      // Выполняем вставку для каждой строки
+      for (const row of table.values) {
+        await connection.execute(sql, row)
+      }
+
+      connection.release()
+      console.log(`Данные успешно вставлены в таблицу ${table.schema}.${table.name}`)
+    } catch (error) {
+      console.error(`Ошибка при вставке в таблицу ${table.schema}.${table.name}:`, error)
+    }
+  }
+}
 
 async function main() {
   const args = process.argv.slice(0)
@@ -258,36 +287,50 @@ async function main() {
 
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
-    const items = orderByReference(rows)
+    const data = bake(orderByReference(rows))
 
-    // const result = []
-    // const tableItems = []
-    //
-    // let tableName = items[0].tableName
-    // for (let i = 0; i < items.length; i++) {
-    //   tableItems.push(items[i])
-    //
-    //   if (items[i + 1].tableName !== tableName) {
-    //     const food = await bake(tableItems)
-    //     result.push(food)
-    //
-    //     tableName = items[i + 1].tableName
-    //   }
-    // }
+    const tables = {}
+    data.forEach(item => {
+      const key = `${item.tableSchema}.${item.tableName}`
+      if (!tables[key]) {
+        tables[key] = {
+          schema: item.tableSchema,
+          name: item.tableName,
+          columns: [],
+          values: [],
+        }
+      }
 
-    return bake(items)
+      // Добавляем информацию о колонке
+      if (!tables[key].columns.includes(item.columnName)) {
+        tables[key].columns.push(item.columnName)
+      }
+    })
 
-    // const connection = await databaseConnection.getConnection()
-    // await connection.beginTransaction()
-    //
-    // try {
-    //   await connection.query(food)
-    //   await connection.commit()
-    // } catch (e) {
-    //   await connection.rollback()
-    // } finally {
-    //   await connection.release()
-    // }
+    Object.keys(tables).forEach(key => {
+      const table = tables[key]
+      const columnCount = table.columns.length
+
+      // Находим все записи для этой таблицы
+      const tableItems = data.filter(
+        item => item.tableSchema === table.schema && item.tableName === table.name,
+      )
+
+      // Определяем количество строк
+      const rowCount = tableItems[0]?.values?.length || 0
+
+      // Формируем значения для каждой строки
+      for (let i = 0; i < rowCount; i++) {
+        const rowValues = []
+        table.columns.forEach(col => {
+          const colItem = tableItems.find(item => item.columnName === col)
+          rowValues.push(colItem.values[i])
+        })
+        table.values.push(rowValues)
+      }
+    })
+
+    await insertData(tables)
   }
 
   if (command === 'help') {
