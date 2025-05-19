@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals'
-import {bake} from '#foodb/foodb'
+import {bake} from 'packages/testing/foodb/index.js'
 
 describe('', () => {
   const items = [
