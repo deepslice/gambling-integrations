@@ -42,52 +42,48 @@ describe('', () => {
   ]
 
   it('', () => {
-    const result = []
-    let tableItems = []
-    const foods = bake(items)
-    for (const food of foods) {
-      console.log('food:', food.tableName, food.columnName)
-    }
+    const tables = {}
+    const data = bake(items)
+    data.forEach(item => {
+      const key = `${item.tableSchema}.${item.tableName}`
+      if (!tables[key]) {
+        tables[key] = {
+          schema: item.tableSchema,
+          name: item.tableName,
+          columns: [],
+          values: [],
+        }
+      }
 
-    // let tableName = foods[0].tableName
-    // for (let i = 0; i < foods.length; i++) {
-    //   tableItems.push(foods[i].values)
-    //
-    //   if (i === foods.length - 1) {
-    //     break
-    //   }
-    //
-    //   if (foods[i + 1].tableName !== tableName) {
-    //     result.push(tableItems)
-    //     tableItems = []
-    //     tableName = foods[i + 1].tableName
-    //   }
-    // }
+      // Добавляем информацию о колонке
+      if (!tables[key].columns.includes(item.columnName)) {
+        tables[key].columns.push(item.columnName)
+      }
+    })
 
-    // let result = []
-    // let tableItems = []
-    //
-    // let tableName = items[0].tableName
-    // for (let i = 0; i < items.length; i++) {
-    //   tableItems.push(items[i])
-    //
-    //   if (i === items.length - 1) {
-    //     console.log('tableItems2:', tableItems)
-    //     const food = await bake(tableItems)
-    //     result.push(food)
-    //     break
-    //   }
-    //
-    //   if (items[i + 1].tableName !== tableName) {
-    //     console.log('tableItems:', tableItems)
-    //     const food = await bake(tableItems)
-    //     result.push(food)
-    //
-    //     tableItems = []
-    //     tableName = items[i + 1].tableName
-    //   }
-    // }
+    Object.keys(tables).forEach(key => {
+      const table = tables[key]
+      const columnCount = table.columns.length
 
-    expect(result).toBe([])
+      // Находим все записи для этой таблицы
+      const tableItems = data.filter(
+        item => item.tableSchema === table.schema && item.tableName === table.name,
+      )
+
+      // Определяем количество строк
+      const rowCount = tableItems[0]?.values?.length || 0
+
+      // Формируем значения для каждой строки
+      for (let i = 0; i < rowCount; i++) {
+        const rowValues = []
+        table.columns.forEach(col => {
+          const colItem = tableItems.find(item => item.columnName === col)
+          rowValues.push(colItem.values[i])
+        })
+        table.values.push(rowValues)
+      }
+    })
+
+    expect(tables).toBe([])
   })
 })
