@@ -41,8 +41,29 @@ describe('', () => {
     },
   ]
 
-  it('', async () => {
-    const result = bake(items)
+  it('', () => {
+    const result = []
+    let tableItems = []
+    const foods = bake(items)
+    for (const food of foods) {
+      console.log('food:', food.tableName, food.columnName)
+    }
+
+    // let tableName = foods[0].tableName
+    // for (let i = 0; i < foods.length; i++) {
+    //   tableItems.push(foods[i].values)
+    //
+    //   if (i === foods.length - 1) {
+    //     break
+    //   }
+    //
+    //   if (foods[i + 1].tableName !== tableName) {
+    //     result.push(tableItems)
+    //     tableItems = []
+    //     tableName = foods[i + 1].tableName
+    //   }
+    // }
+
     // let result = []
     // let tableItems = []
     //

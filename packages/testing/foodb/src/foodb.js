@@ -53,15 +53,14 @@ export function splitByTable(items) {
  * @returns {[]}
  */
 export function unpackMultiplicity(item, cardinality = defaultCardinality) {
-  const itemValues = []
-
+  const values = []
   for (let i = 0; i < cardinality; i++) {
     let value = null
 
     if (isUnique(item)) {
       while (true) {
         value = generateItemValue(item)
-        if (!itemValues.includes(value)) {
+        if (!values.includes(value)) {
           break
         }
       }
@@ -69,10 +68,13 @@ export function unpackMultiplicity(item, cardinality = defaultCardinality) {
       value = generateItemValue(item)
     }
 
-    itemValues.push(value)
+    values.push(value)
   }
 
-  return itemValues
+  return {
+    ...item,
+    values,
+  }
 }
 
 /**
@@ -209,7 +211,7 @@ export function bake(items) {
       i.referencedColumn === item.columnName)
       .forEach(i => references.set(
         `${i.referencedTableSchema}:${i.referencedTableName}:${i.referencedColumn}`,
-        itemValues,
+        itemValues.values,
       ))
 
     const {
@@ -220,18 +222,23 @@ export function bake(items) {
     const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumn}`
 
     if (hasReferenced(item)) {
-      itemValues = references.get(referenceKey)
+      itemValues = {
+        ...item,
+        values: references.get(referenceKey),
+      }
     }
 
     result.push(itemValues)
   }
 
-  return transpose(result)
+  console.log(result)
+  //return transpose(result)
+  return result
 }
 
-const transpose = (matrix) => {
-  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]))
-}
+// const transpose = (matrix) => {
+//   return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]))
+// }
 
 async function main() {
   const args = process.argv.slice(0)
