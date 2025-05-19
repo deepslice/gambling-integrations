@@ -1,4 +1,5 @@
 // src/main.js
+import {foodb} from './foodb.js'
 import {databaseConnection} from 'core-infra/database/connection.js'
 
 const defaultCardinality = 5
@@ -118,7 +119,7 @@ export function generateItemValue(item) {
       return (Math.random() * 100).toFixed(2)
 
     case 'char':
-      return ''
+      return foodb.varchar('sushi', 4)
 
     case 'varchar':
       return ''
