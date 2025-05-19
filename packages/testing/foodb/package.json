@@ -3,12 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
-  "imports": {
-    "#foodb/*": "./src/*.js"
-  },
   "scripts": {
-    "start": "node src/foodb.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent"
+    "start": "node index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "author": "",
   "license": "ISC",
