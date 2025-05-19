@@ -1,8 +1,17 @@
 import {describe, expect, it} from '@jest/globals'
-import {bake} from './index.js'
+import {bake, orderByReference} from './index.js'
 
 describe('', () => {
   const items = [
+    {
+      tableSchema: 'b',
+      tableName: 'b',
+      columnName: 'b2',
+      dataType: 'int',
+      referencedTableSchema: 'a',
+      referencedTableName: 'a',
+      referencedColumn: 'a2',
+    },
     {
       tableSchema: 'a',
       tableName: 'a',
@@ -30,20 +39,11 @@ describe('', () => {
       referencedTableName: 'a',
       referencedColumn: 'a2',
     },
-    {
-      tableSchema: 'b',
-      tableName: 'b',
-      columnName: 'b2',
-      dataType: 'int',
-      referencedTableSchema: 'a',
-      referencedTableName: 'a',
-      referencedColumn: 'a2',
-    },
   ]
 
   it('', () => {
+    const data = bake(orderByReference(items))
     const tables = {}
-    const data = bake(items)
     data.forEach(item => {
       const key = `${item.tableSchema}.${item.tableName}`
       if (!tables[key]) {

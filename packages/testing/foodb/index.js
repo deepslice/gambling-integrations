@@ -10,7 +10,7 @@ const references = new Map()
  * @param items
  */
 export function orderByReference(items) {
-  return items.sort((a, b) => a.referencedTableName === b.tableName ? -1 : 1)
+  return items.sort((a, b) => a.referencedTableName === b.tableName ? 1 : -1)
 }
 
 /**
