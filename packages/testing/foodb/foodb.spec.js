@@ -7,7 +7,7 @@ describe('', () => {
       tableSchema: 'a',
       tableName: 'a',
       columnName: 'a1',
-      dataType: 'int',
+      dataType: 'char',
       referencedTableSchema: null,
       referencedTableName: null,
       referencedColumn: null,

@@ -36,7 +36,7 @@ class Foodb {
       ? pack.templates[Math.floor(Math.random() * pack.templates.length)]
       : '[default]'
 
-    return template.replace(/\[(\w+)\]/g, (match, key) => {
+    return template.replace(/\[([а-яА-Я\w]+)\]/g, (match, key) => {
       return pack[key]
         ? pack[key][Math.floor(Math.random() * pack[key].length)]
         : match

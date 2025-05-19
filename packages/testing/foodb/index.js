@@ -119,7 +119,7 @@ export function generateItemValue(item) {
       return (Math.random() * 100).toFixed(2)
 
     case 'char':
-      return foodb.varchar('sushi', 4)
+      return foodb.varchar('sushi')
 
     case 'varchar':
       return ''
