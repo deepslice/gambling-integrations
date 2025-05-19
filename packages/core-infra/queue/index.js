@@ -1,6 +1,6 @@
-const publisher = require('./publisher')
-const consumer = require('./consumer')
-const connection = require('./connection')
+const publisher = require('./publisher.js')
+const consumer = require('./consumer.js')
+const connection = require('./connection.js')
 
 module.exports = {
   publisher,

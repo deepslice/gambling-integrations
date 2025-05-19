@@ -1,4 +1,4 @@
-import {databaseConnection} from '#app/infrastructure/database/connection'
+import {databaseConnection} from 'packages/core-infra/database/connection'
 
 const getGameInfo = `
     SELECT g.uuid       AS uuid

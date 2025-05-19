@@ -1,5 +1,5 @@
-const connection = require('./connection')
-const BaseRepository = require('./repository')
+const connection = require('./connection.js')
+const BaseRepository = require('./repository.js')
 const QueryBuilder = require('./query-builder')
 
 // Создаем прокси для удобного доступа к методам репозитория

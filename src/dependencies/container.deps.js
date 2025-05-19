@@ -1,7 +1,7 @@
-// DI Container
-import {databaseConnection} from '#app/infrastructure/database/connection'
+import {databaseConnection} from 'packages/core-infra/database/connection'
 import {AppConfig} from '#app/config'
 
+// DI Container
 export class Container {
   constructor(
     config = new AppConfig(),

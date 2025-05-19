@@ -29,7 +29,6 @@ let currentReferences = new Map()
 // Вспомогательные функции
 function extractVarcharLength(colType) {
   const match = /char\((\d+)\)/i.exec(colType)
-  // console.log('match', match)
   return match ? parseInt(match[1]) : null
 }
 
@@ -42,7 +41,7 @@ function generateUniqueString(base, existing, lengthLimit = null) {
     }
 
     if (!existing.has(uniqueStr)) {
-      console.log('uniqueStr:', uniqueStr, existing)
+      // console.log('uniqueStr:', uniqueStr, existing)
       return uniqueStr
     }
 
@@ -229,7 +228,6 @@ function generateInsert(table, columns, references) {
 
       let value
 
-      // if primary
       if (isPrimary) {
         value = generateValue(columnType, columnName, isPrimary, false, usedPrimaryValues, new Set(), references)
         rowValues.push(value)
@@ -238,7 +236,6 @@ function generateInsert(table, columns, references) {
         value = generateValue(columnType, columnName, false, isUnique, new Set(), usedUniqueValues, references)
         rowValues.push(`'${value}'`)
 
-        // if unique
         if (isUnique) {
           // Important!
           // value = value.replace(/^'|'$/g, '')
@@ -293,8 +290,8 @@ function main() {
     if (file.endsWith('.sql')) {
       try {
         const content = readFileSync(path.join(sourceDirs[2], file), 'utf8')
+
         const {tableName, columns, references} = parseColumns(content)
-        // console.log('references:', tableName, references)
         const seedSql = generateInsert(tableName, columns, references)
 
         const filenameBase = path.parse(file).name
@@ -303,7 +300,7 @@ function main() {
 
         const outputContent = `-- +++ UP +++\n${seedSql}\n-- +++ DOWN +++\n\n`
         await writeFileSync(outputPath, outputContent, 'utf8')
-        // console.log(`✅ Created seed for table: ${tableName}`)
+
       } catch (err) {
         console.error(`❌ Failed to process ${file}: ${err.message}`)
       }

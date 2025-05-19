@@ -1,5 +1,5 @@
-import redis from '#app/infrastructure/cache/index'
-import {databaseConnection} from '#app/infrastructure/database/connection'
+import redis from 'packages/core-infra/cache/index'
+import {databaseConnection} from 'packages/core-infra/database/connection'
 import {assertField} from '#app/utils/assert.util'
 
 export class CurrencyConverterService {

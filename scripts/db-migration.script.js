@@ -1,7 +1,7 @@
 import fs, {readdirSync, statSync} from 'node:fs'
 import path from 'node:path'
 
-import {databaseConnection} from '#app/infrastructure/database/connection'
+import {databaseConnection} from 'packages/core-infra/database/connection'
 
 // const sourceDir1 = 'db/migrations/0001-privileges'
 // const sourceDir2 = 'db/migrations/0002-databases'

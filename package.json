@@ -11,7 +11,7 @@
     "start": "node dist/src/app/main.js",
     "migrate": "node scripts/db-migration.script.js",
     "lint": "eslint src",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "dependencies": {
     "axios": "^1.9.0",

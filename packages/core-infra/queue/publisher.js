@@ -1,5 +1,5 @@
-const connection = require('./connection')
-const config = require('./config')
+const connection = require('./connection.js')
+const config = require('./config.js')
 const {rabbitMQ} = config
 
 class RabbitMQPublisher {
