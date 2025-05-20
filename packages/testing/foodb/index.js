@@ -5,12 +5,79 @@ import {databaseConnection} from 'core-infra/database/connection.js'
 const defaultCardinality = 5
 const references = new Map()
 
-/**
- * orderByReference
- * @param items
- */
-export function orderByReference(items) {
-  return items.sort((a, b) => a.referencedTableName === b.tableName ? 1 : -1)
+function sortMigrationData(columns) {
+  // Группируем по таблицам
+  const tablesMap = new Map()
+
+  for (const col of columns) {
+    const tableKey = `${col.tableSchema}.${col.tableName}`
+    if (!tablesMap.has(tableKey)) {
+      tablesMap.set(tableKey, [])
+    }
+    tablesMap.get(tableKey).push(col)
+  }
+
+  // Строим граф зависимостей: какие таблицы зависят от каких
+  const dependencyGraph = new Map()
+
+  for (const [tableKey, cols] of tablesMap.entries()) {
+    if (!dependencyGraph.has(tableKey)) {
+      dependencyGraph.set(tableKey, new Set())
+    }
+    for (const col of cols) {
+      if (col.constraintType === 'FOREIGN KEY' && col.referencedTableName) {
+        const refKey = `${col.referencedTableSchema}.${col.referencedTableName}`
+        if (refKey !== tableKey) {
+          dependencyGraph.get(tableKey).add(refKey)
+        }
+      }
+    }
+  }
+
+  // Топологическая сортировка
+  const visited = new Set()
+  const visiting = new Set()
+  const sortedTables = []
+
+  function dfs(tableKey) {
+    if (visited.has(tableKey)) return
+    if (visiting.has(tableKey)) {
+      throw new Error(`Циклическая зависимость обнаружена: ${tableKey}`)
+    }
+    visiting.add(tableKey)
+    const deps = dependencyGraph.get(tableKey) || []
+    for (const dep of deps) {
+      dfs(dep)
+    }
+    visiting.delete(tableKey)
+    visited.add(tableKey)
+    sortedTables.push(tableKey)
+  }
+
+  for (const tableKey of dependencyGraph.keys()) {
+    dfs(tableKey)
+  }
+
+  // Порядок колонок по порядку таблиц
+  const sortedColumns = []
+  for (const tableKey of sortedTables) {
+    const cols = tablesMap.get(tableKey)
+    if (cols) {
+      // Сортируем колонки внутри таблицы по ordinalPosition
+      cols.sort((a, b) => a.ordinalPosition - b.ordinalPosition)
+      sortedColumns.push(...cols)
+    }
+  }
+
+  // Добавим таблицы без зависимостей, которые не были в графе
+  for (const [tableKey, cols] of tablesMap.entries()) {
+    if (!visited.has(tableKey)) {
+      cols.sort((a, b) => a.ordinalPosition - b.ordinalPosition)
+      sortedColumns.push(...cols)
+    }
+  }
+
+  return sortedColumns
 }
 
 /**
@@ -105,7 +172,7 @@ export function isUnique(item) {
  */
 export function generateItemValue(item) {
   const {characterMaximumLength} = item
-  console.log('dataType:', item.dataType)
+
   switch (item.dataType) {
     case 'int':
       return Math.floor(Math.random() * 1000) + 1
@@ -185,6 +252,7 @@ export async function getDbms() {
                                                                  k.TABLE_SCHEMA = n.TABLE_SCHEMA AND
                                                                  k.TABLE_NAME = n.TABLE_NAME
                                            WHERE t.TABLE_TYPE = 'BASE TABLE'
+                                             AND t.TABLE_NAME NOT IN ('migrations')
                                              AND t.TABLE_SCHEMA IN ('mydb');`,
       //AND t.TABLE_SCHEMA NOT IN
       //    ('INFORMATION_SCHEMA', 'mysql', 'performance_schema');`,
@@ -205,28 +273,25 @@ export async function getDbms() {
  */
 export function bake(items) {
   const result = []
-  // const columnNames = items.map(i => `\`${i.columnName}\``).join(', ')
 
   for (const item of items) {
-    console.log('called')
     let itemValues = unpackMultiplicity(item)
-    console.log('called end')
 
     items.filter(i =>
       i.referencedTableSchema === item.tableSchema &&
       i.referencedTableName === item.tableName &&
-      i.referencedColumn === item.columnName)
+      i.referencedColumnName === item.columnName)
       .forEach(i => references.set(
-        `${i.referencedTableSchema}:${i.referencedTableName}:${i.referencedColumn}`,
+        `${i.referencedTableSchema}:${i.referencedTableName}:${i.referencedColumnName}`,
         itemValues.values,
       ))
 
     const {
       referencedTableSchema,
       referencedTableName,
-      referencedColumn,
+      referencedColumnName,
     } = item
-    const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumn}`
+    const referenceKey = `${referencedTableSchema}:${referencedTableName}:${referencedColumnName}`
 
     if (hasReferenced(item)) {
       itemValues = {
@@ -238,8 +303,6 @@ export function bake(items) {
     result.push(itemValues)
   }
 
-  console.log(result)
-  //return transpose(result)
   return result
 }
 
@@ -293,16 +356,10 @@ async function main() {
 
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
-    const ordered = orderByReference(rows)
+    const sorted = sortMigrationData(rows)
+    // console.log(bake(sorted))
 
-    try {
-      console.log('im here 1!')
-      const data = bake(ordered)
-      console.log('im here 2!')
-    } catch (e) {
-      throw e
-    }
-
+    const data = bake(sorted)
     const tables = {}
     data.forEach(item => {
       const key = `${item.tableSchema}.${item.tableName}`
@@ -344,14 +401,11 @@ async function main() {
       }
     })
 
-    console.log('tables:', tables)
-
     await insertData(tables)
   }
 
   if (command === 'help') {
-    const rows = await getDbms()
-    console.log(rows)
+
   }
 }
 
