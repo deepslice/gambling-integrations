@@ -224,7 +224,7 @@ export function generateItemValue(item) {
       foodb.text('sushi', characterMaximumLength)
 
     case 'json':
-      return '{ "secretKey": "test" }'
+      return '{ "currency": "USD", "database": "", "secretKey": "test", "operatorId": "12345" }'
 
     case 'enum':
       const values = extractEnumValues(item.columnType)

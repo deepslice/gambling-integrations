@@ -1,29 +1,29 @@
 export const dataPacks = {
   sushi: {
-    names: ['Калифорния', 'Филадельфия', 'Унаги', 'Сяке', 'Тори'],
-    ingredients: ['рис', 'нори', 'лосось', 'авокадо', 'огурец'],
+    names: ['California', 'Philadelphia', 'Unagi', 'Sake', 'Tori'],
+    ingredients: ['rice', 'nori', 'salmon', 'avocado', 'cucumber'],
     templates: [
-      '[names] с [ingredients]',
-      'Суши [ingredients]',
-      '[names] в стиле [cities]',
+      '[names] with [ingredients]',
+      'Sushi [ingredients]',
+      '[names] in [cities] style',
     ],
-    cities: ['Токио', 'Осака', 'Киото'],
+    cities: ['Tokyo', 'Osaka', 'Kyoto'],
   },
   burgers: {
-    names: ['Чизбургер', 'Веганбургер', 'Черри-бургер', 'Двойной бекон'],
-    toppings: ['сыр', 'кетчуп', 'лук', 'салат', 'перец'],
+    names: ['Cheeseburger', 'Vegan Burger', 'Cherry Burger', 'Double Bacon'],
+    toppings: ['cheese', 'ketchup', 'onion', 'lettuce', 'pepper'],
     templates: [
-      '[бургер] с [топпинг]',
-      'Острый [бургер]',
-      '[бургер] по-домашнему',
+      '[names] with [toppings]',
+      'Spicy [burger]',
+      '[names] homemade style',
     ],
   },
   pizza: {
-    names: ['Маргарита', 'Пепперони', 'Гавайская', 'Четыре сыра'],
-    toppings: ['томаты', 'моцарелла', 'ветчина', 'ананасы'],
+    names: ['Margherita', 'Pepperoni', 'Hawaiian', 'Four Cheese'],
+    toppings: ['tomatoes', 'mozzarella', 'ham', 'pineapples'],
     templates: [
-      'Пицца \'[название]\'',
-      '[название] с [топпинг]',
+      'Pizza \'[names]\'',
+      '[names] with [toppings]',
     ],
   },
 }
