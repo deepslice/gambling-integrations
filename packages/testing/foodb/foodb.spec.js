@@ -41,7 +41,22 @@ describe('', () => {
     },
   ]
 
-  it('', () => {
+  const expected = {
+    'a.a': {
+      schema: 'a',
+      name: 'a',
+      columns: ['a1', 'a2'],
+      values: [],
+    },
+    'b.b': {
+      schema: 'b',
+      name: 'b',
+      columns: ['b1', 'b2'],
+      values: [],
+    },
+  }
+
+  it('should be passed', () => {
     const data = bake(orderByReference(items))
     const tables = {}
     data.forEach(item => {

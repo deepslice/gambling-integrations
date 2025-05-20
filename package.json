@@ -9,7 +9,7 @@
     "dev": "tsx watch src/app/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/src/app/main.js",
-    "migrate": "node scripts/db-migration.script.js",
+    "migrate": "node packages/testing/migration/index.js",
     "lint": "eslint src",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },

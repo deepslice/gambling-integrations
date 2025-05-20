@@ -104,8 +104,9 @@ export function isUnique(item) {
  * @returns {number|string}
  */
 export function generateItemValue(item) {
-  switch (item.dataType) {
+  const {characterMaximumLength} = item
 
+  switch (item.dataType) {
     case 'int':
       return Math.floor(Math.random() * 1000) + 1
 
@@ -119,13 +120,13 @@ export function generateItemValue(item) {
       return (Math.random() * 100).toFixed(2)
 
     case 'char':
-      return foodb.varchar('sushi')
+      return foodb.varchar('sushi', characterMaximumLength)
 
     case 'varchar':
-      return ''
+      return foodb.varchar('sushi', characterMaximumLength)
 
     case 'text':
-      return ''
+      return foodb.text('sushi', characterMaximumLength)
 
     case 'json':
       return '{}'
@@ -278,7 +279,7 @@ async function main() {
     host: 'localhost',
     port: 3306,
     user: 'root',
-    database: 'global',
+    database: 'foodb',
     password: 'root',
     multipleStatements: true,
     waitForConnections: true,
@@ -334,7 +335,8 @@ async function main() {
   }
 
   if (command === 'help') {
-
+    const rows = await getDbms()
+    console.log(rows)
   }
 }
 
