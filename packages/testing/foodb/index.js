@@ -105,9 +105,12 @@ export function isUnique(item) {
  */
 export function generateItemValue(item) {
   const {characterMaximumLength} = item
-
+  console.log('dataType:', item.dataType)
   switch (item.dataType) {
     case 'int':
+      return Math.floor(Math.random() * 1000) + 1
+
+    case 'bigint':
       return Math.floor(Math.random() * 1000) + 1
 
     case 'tinyint':
@@ -182,8 +185,9 @@ export async function getDbms() {
                                                                  k.TABLE_SCHEMA = n.TABLE_SCHEMA AND
                                                                  k.TABLE_NAME = n.TABLE_NAME
                                            WHERE t.TABLE_TYPE = 'BASE TABLE'
-                                             AND t.TABLE_SCHEMA NOT IN
-                                                 ('INFORMATION_SCHEMA', 'mysql', 'performance_schema');`,
+                                             AND t.TABLE_SCHEMA IN ('mydb');`,
+      //AND t.TABLE_SCHEMA NOT IN
+      //    ('INFORMATION_SCHEMA', 'mysql', 'performance_schema');`,
     )
 
     return rows
@@ -201,11 +205,12 @@ export async function getDbms() {
  */
 export function bake(items) {
   const result = []
-
   // const columnNames = items.map(i => `\`${i.columnName}\``).join(', ')
 
   for (const item of items) {
+    console.log('called')
     let itemValues = unpackMultiplicity(item)
+    console.log('called end')
 
     items.filter(i =>
       i.referencedTableSchema === item.tableSchema &&
@@ -279,7 +284,7 @@ async function main() {
     host: 'localhost',
     port: 3306,
     user: 'root',
-    database: 'foodb',
+    database: 'mydb',
     password: 'root',
     multipleStatements: true,
     waitForConnections: true,
@@ -288,7 +293,15 @@ async function main() {
 
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
-    const data = bake(orderByReference(rows))
+    const ordered = orderByReference(rows)
+
+    try {
+      console.log('im here 1!')
+      const data = bake(ordered)
+      console.log('im here 2!')
+    } catch (e) {
+      throw e
+    }
 
     const tables = {}
     data.forEach(item => {
@@ -330,6 +343,8 @@ async function main() {
         table.values.push(rowValues)
       }
     })
+
+    console.log('tables:', tables)
 
     await insertData(tables)
   }

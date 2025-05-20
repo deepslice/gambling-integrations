@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
-    "migration": "node node_modules/migration/index.js up"
+    "migration": "node node_modules/migration/index.js up --dir ./testdata/db/migrations"
   },
   "author": "",
   "license": "ISC",

@@ -6,8 +6,8 @@ create table dishes
     name          varchar(100)   not null,
     price         decimal(10, 2) not null,
     calories      integer,
-    ingredients   text[],
-    constraint dishes_fk_1 foreign key (restaurant_id) references restaurants (id),
+    ingredients   text,
+    constraint dishes_fk_1 foreign key (restaurant_id) references restaurants (id)
 );
 
 -- +++ DOWN +++
