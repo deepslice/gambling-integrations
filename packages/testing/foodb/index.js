@@ -2,7 +2,7 @@
 import {foodb} from './foodb.js'
 import {databaseConnection} from 'core-infra/database/connection.js'
 
-const defaultCardinality = 5
+const defaultCardinality = 3
 const references = new Map()
 
 function sortMigrationData(columns) {
@@ -166,6 +166,28 @@ export function isUnique(item) {
 }
 
 /**
+ * extractEnumValues
+ * @param enumString
+ * @returns {*|*[]}
+ */
+function extractEnumValues(enumString) {
+  // Регулярное выражение для поиска значений внутри enum('...','...')
+  const regex = /enum\(([^)]+)\)/
+  const match = enumString.match(regex)
+
+  if (!match) {
+    return []
+  }
+
+  // Разделяем значения и очищаем от кавычек и пробелов
+  const values = match[1]
+    .split(',')
+    .map(item => item.trim().replace(/^'|'$/g, ''))
+
+  return values
+}
+
+/**
  * generateItemValue
  * @param item
  * @returns {number|string}
@@ -199,10 +221,11 @@ export function generateItemValue(item) {
       return foodb.text('sushi', characterMaximumLength)
 
     case 'json':
-      return '{}'
+      return '{ "secretKey": "test" }'
 
     case 'enum':
-      break
+      const values = extractEnumValues(item.columnType)
+      return values[Math.floor(Math.random() * values.length)]
 
     case 'date':
       return `${
@@ -232,6 +255,7 @@ export async function getDbms() {
                                                   t.TABLE_SCHEMA             as tableSchema,
                                                   t.TABLE_NAME               as tableName,
                                                   c.COLUMN_NAME              as columnName,
+                                                  c.COLUMN_TYPE              as columnType,
                                                   c.ORDINAL_POSITION         as ordinalPosition,
                                                   c.DATA_TYPE                as dataType,
                                                   c.CHARACTER_MAXIMUM_LENGTH as characterMaximumLength,
@@ -356,7 +380,7 @@ async function main() {
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
     const sorted = sortMigrationData(rows)
-    // console.log(bake(sorted))
+    // console.log(sorted)
 
     const data = bake(sorted)
     const tables = {}
