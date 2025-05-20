@@ -1,7 +1,7 @@
 #!/bin/bash
 
 docker rm -f $(docker ps -a -q)
-docker compose up -d mysql
+docker compose up -d mysql redis
 sleep 60s
 
 # Миграция схем и таблиц

@@ -1,4 +1,4 @@
-import {databaseConnection} from 'packages/core-infra/database/connection'
+import {databaseConnection} from 'core-infra/database/connection.js'
 
 export class UserModel {
   constructor(database = databaseConnection) {
@@ -11,8 +11,7 @@ export class UserModel {
 
   async getUserBalance(useId) {
     const [[userBalance]] = await this.database.query(`
-        select ? / ? as balance
-             , ? * ? as convertedAmount
+        select ? / ? as balance, ? * ? as convertedAmount
         from users
         where id = ?
     `, [user.balance, rate, user?.convertedAmount || 0, rate, user.id])
@@ -33,8 +32,7 @@ export class UserModel {
              , deleted                                 AS deleted
              , unix_timestamp(created_at)              AS createdAt
         FROM users
-        WHERE id = ? FOR
-            UPDATE`, [userId],
+        WHERE id = ? FOR UPDATE`, [userId],
     )
 
     return user

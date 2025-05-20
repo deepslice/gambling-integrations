@@ -1,4 +1,4 @@
-import {databaseConnection} from 'packages/core-infra/database/connection'
+import {databaseConnection} from 'core-infra/database/connection.js'
 
 export class RestrictsModel {
 
@@ -8,8 +8,7 @@ export class RestrictsModel {
 
   async getRestrictions() {
     await this.database.query(`
-                select ggr * ?                                   as ggr,
-                       if(max_ggr is not null, max_ggr - ggr, 1) as difference
+                select ggr * ?                                                                                                     as                                                   ggr, if(max_ggr is not null, max_ggr - ggr, 1) as difference
                 from casino.restrictions
                 where code = ?`,
       [

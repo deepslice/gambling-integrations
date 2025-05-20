@@ -1,5 +1,5 @@
 import axios from 'axios'
-import redis from 'packages/core-infra/cache/index'
+import redis from 'core-infra/cache/index.js'
 import {randomBytes} from 'node:crypto'
 import {configService} from '#app/modules/config/config.service'
 

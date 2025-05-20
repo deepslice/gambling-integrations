@@ -1,4 +1,4 @@
-import {databaseConnection} from 'packages/core-infra/database/connection'
+import {databaseConnection} from 'core-infra/database/connection.js'
 
 export class LimitsModel {
 

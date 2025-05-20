@@ -1,5 +1,5 @@
-import redis from 'packages/core-infra/cache/index'
-import {databaseConnection} from 'packages/core-infra/database/connection'
+import redis from 'core-infra/cache/index'
+import {databaseConnection} from 'core-infra/database/connection'
 import {assertField} from '#app/utils/assert.util'
 
 export class CurrencyConverterService {
@@ -19,8 +19,7 @@ export class CurrencyConverterService {
 
     // Вычисляем результат в SQL для большей точности
     const [[userBalance]] = await this.database.query(`
-        select ? / ? as balance
-             , ? * ? as convertedAmount
+        select ? / ? as balance, ? * ? as convertedAmount
         from users
         where id = ?
     `, [amount, rate, amount, rate])
