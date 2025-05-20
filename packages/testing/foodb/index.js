@@ -220,6 +220,9 @@ export function generateItemValue(item) {
     case 'text':
       return foodb.text('sushi', characterMaximumLength)
 
+    case 'mediumtext':
+      foodb.text('sushi', characterMaximumLength)
+
     case 'json':
       return '{ "secretKey": "test" }'
 
@@ -330,6 +333,71 @@ export function bake(items) {
 }
 
 /**
+ * mergeDuplicateColumns
+ * @param data
+ * @returns {any[]}
+ */
+function mergeDuplicateColumns(data) {
+  const mergedMap = new Map()
+
+  data.forEach(item => {
+    const key = `${item.tableSchema}|${item.tableName}|${item.columnName}|${item.ordinalPosition}`
+
+    if (!mergedMap.has(key)) {
+      // Создаем новый объект для merged item
+      const mergedItem = {
+        dbms: item.dbms,
+        tableSchema: item.tableSchema,
+        tableName: item.tableName,
+        columnName: item.columnName,
+        columnType: item.columnType,
+        ordinalPosition: item.ordinalPosition,
+        dataType: item.dataType,
+        characterMaximumLength: item.characterMaximumLength,
+        constraintType: item.constraintType ? [item.constraintType] : [],
+        referencedTableSchema: item.referencedTableSchema || null,
+        referencedTableName: item.referencedTableName || null,
+        referencedColumnName: item.referencedColumnName || null,
+      }
+      mergedMap.set(key, mergedItem)
+    } else {
+      // Обновляем существующий merged item
+      const existingItem = mergedMap.get(key)
+
+      // Добавляем constraintType если он есть и его еще нет в массиве
+      if (item.constraintType && !existingItem.constraintType.includes(item.constraintType)) {
+        existingItem.constraintType.push(item.constraintType)
+      }
+
+      // Обновляем referenced поля, если они есть в текущем item
+      if (item.referencedTableSchema) {
+        existingItem.referencedTableSchema = item.referencedTableSchema
+      }
+      if (item.referencedTableName) {
+        existingItem.referencedTableName = item.referencedTableName
+      }
+      if (item.referencedColumnName) {
+        existingItem.referencedColumnName = item.referencedColumnName
+      }
+    }
+  })
+
+  // Преобразуем Map обратно в массив и обрабатываем constraintType
+  return Array.from(mergedMap.values()).map(item => {
+    // Если constraintType пустой массив, делаем его null
+    if (item.constraintType.length === 0) {
+      item.constraintType = null
+    } else if (item.constraintType.length === 1) {
+      // Если только один constraintType, делаем его строкой
+      item.constraintType = item.constraintType[0]
+    }
+    // Иначе оставляем как массив
+
+    return item
+  })
+}
+
+/**
  * insertData
  * @param tables
  * @returns {Promise<void>}
@@ -370,7 +438,6 @@ async function main() {
     host: 'localhost',
     port: 3306,
     user: 'root',
-    database: 'mydb',
     password: 'root',
     multipleStatements: true,
     waitForConnections: true,
@@ -379,7 +446,7 @@ async function main() {
 
   if (command === 'bake' || command === 'cook') {
     const rows = await getDbms()
-    const sorted = sortMigrationData(rows)
+    const sorted = mergeDuplicateColumns(sortMigrationData(rows))
     // console.log(sorted)
 
     const data = bake(sorted)
