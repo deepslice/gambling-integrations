@@ -23,7 +23,9 @@
     "@jest-mock/express": "^3.0.0",
     "@jest/globals": "^29.7.0",
     "eslint": "^9.26.0",
+    "foodb": "file:packages/testing/foodb",
     "jest": "^29.7.0",
+    "migration": "file:packages/testing/migration",
     "supertest": "^7.1.0"
   }
 }
