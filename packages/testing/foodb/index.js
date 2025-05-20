@@ -217,7 +217,7 @@ export function generateItemValue(item) {
           .replace(/\..+/, '')
       }`
     default:
-      return 'NULL'
+      return null
   }
 }
 
@@ -253,9 +253,8 @@ export async function getDbms() {
                                                                  k.TABLE_NAME = n.TABLE_NAME
                                            WHERE t.TABLE_TYPE = 'BASE TABLE'
                                              AND t.TABLE_NAME NOT IN ('migrations')
-                                             AND t.TABLE_SCHEMA IN ('mydb');`,
-      //AND t.TABLE_SCHEMA NOT IN
-      //    ('INFORMATION_SCHEMA', 'mysql', 'performance_schema');`,
+                                             AND t.TABLE_SCHEMA NOT IN
+                                                 ('information_schema', 'mysql', 'performance_schema', 'sys');`,
     )
 
     return rows
