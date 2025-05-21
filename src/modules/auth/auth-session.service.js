@@ -1,4 +1,4 @@
-import redis from 'core-infra/cache/index.js'
+import redis from '@core-infra/cache'
 
 const sessionTTLSeconds = 30 * 60 * 60
 

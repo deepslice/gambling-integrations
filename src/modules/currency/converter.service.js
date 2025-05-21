@@ -1,6 +1,6 @@
-import redis from 'core-infra/cache/index.js'
+import redis from '@core-infra/cache'
 import {assertField} from '#app/utils/assert.util'
-import {databaseConnection} from 'core-infra/database/connection.js'
+import {databaseConnection} from '@core-infra/database'
 
 export class CurrencyConverterService {
   constructor(

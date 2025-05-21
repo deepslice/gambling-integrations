@@ -1,4 +1,4 @@
-import dbConnection from 'packages/core-infra/.deprecated/db.connection'
+import dbConnection from 'packages/@core-infra/.deprecated/db.connection'
 import * as errors from '../utils/exceptions.util'
 
 import {UserModel} from 'src/repositories/user/user.model'

@@ -1,4 +1,4 @@
-import {databaseConnection} from 'core-infra/database/connection.js'
+import {databaseConnection} from '@core-infra/database'
 import {assertField} from '#app/utils/assert.util'
 
 class TransactionTypeEnum {

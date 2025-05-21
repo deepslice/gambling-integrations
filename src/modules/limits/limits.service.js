@@ -1,5 +1,5 @@
 import {limitsRepository} from '#app/repositories/limits/limits.model'
-import {restrictionsRepository} from '#app/repositories/restrictions/restrictions.model'
+import {restrictsRepository} from '#app/repositories/restrictions/restrictions.model'
 import {
   BetLimitExceededError,
   LimitExceededError,
@@ -22,7 +22,7 @@ export class LimitsService {
   }
 
   static async checkRestrictions(data) {
-    const restrictions = await restrictionsRepository.getRestrictions(data)
+    const restrictions = await restrictsRepository.getRestrictions(data)
     if (!restrictions || restrictions.ggr < data.amount || restrictions.difference <= 0) {
       throw new RestrictionExceededError(restrictions)
     }

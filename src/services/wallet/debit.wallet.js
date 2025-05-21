@@ -17,6 +17,7 @@ import * as errors from '#app/utils/exceptions.util'
  * @param session
  * @param gameId
  * @param amount
+ * @param transactionId
  * @returns {Promise<void>}
  */
 export async function transaction(session, gameId, amount, transactionId) {
