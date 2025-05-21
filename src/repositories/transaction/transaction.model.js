@@ -78,3 +78,5 @@ export class TransactionModel {
     )
   }
 }
+
+export const transactionRepository = new TransactionModel()

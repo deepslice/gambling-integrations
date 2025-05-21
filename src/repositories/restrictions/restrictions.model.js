@@ -8,7 +8,7 @@ export class RestrictsModel {
 
   async getRestrictions() {
     await this.database.query(`
-                select ggr * ?                                                                                                     as                                                   ggr, if(max_ggr is not null, max_ggr - ggr, 1) as difference
+                select ggr * ? as ggr, if(max_ggr is not null, max_ggr - ggr, 1) as difference
                 from casino.restrictions
                 where code = ?`,
       [
@@ -31,4 +31,4 @@ export class RestrictsModel {
   }
 }
 
-export const restrictionsRepository = new RestrictsModel()
+export const restrictsRepository = new RestrictsModel()

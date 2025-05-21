@@ -27,3 +27,5 @@ export class RoundModel {
     )
   }
 }
+
+export const roundRepository = new RoundModel()
