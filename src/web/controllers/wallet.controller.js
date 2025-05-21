@@ -4,11 +4,15 @@ import {assertField} from '#app/utils/assert.util'
 export class WalletController {
 
   getBalance = async (req, res) => {
-    const response = await getBalance(
+    const balance = await getBalance(
       assertField(req, 'session'),
       assertField(req.query, 'gameId'),
     )
-    res.status(200).json(response).end()
+
+    res.status(200).json({
+      success: true,
+      balance: balance,
+    }).end()
   }
 
   depositFunds = async (req, res) => {

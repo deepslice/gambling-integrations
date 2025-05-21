@@ -57,3 +57,5 @@ export class WageringService {
     return wBalance.balance
   }
 }
+
+export const wageringService = new WageringService()
