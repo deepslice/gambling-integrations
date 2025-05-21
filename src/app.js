@@ -1,7 +1,7 @@
 import express from 'express'
 
-import apiRoutes from '#app/web/routes/api.routes'
-import walletRoutes from '#app/web/routes/wallet.routes'
+import apiRoutes from 'integrations/aspect/routes/api.routes.js'
+import walletRoutes from 'integrations/aspect/routes/wallet.routes.js'
 
 function bootstrap() {
 
