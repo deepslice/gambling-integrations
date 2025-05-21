@@ -7,9 +7,6 @@ const router = new Router()
  * API Routes
  */
 
-router.post(
-  '/game-init',
-  apiController.gameInit,
-)
+router.post('/game-init', apiController.gameInit)
 
 export default router

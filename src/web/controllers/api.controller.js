@@ -1,4 +1,4 @@
-import {ApiService} from '#app/services/api.service'
+import {ApiService} from '#app/services/api/api.service'
 
 export class ApiController {
 

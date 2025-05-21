@@ -10,25 +10,9 @@ const router = Router()
  * Wallet Routes
  */
 
-router.get(
-  '/balances',
-  authenticateSession,
-  walletController.getBalance,
-)
-router.post(
-  '/deposits',
-  authenticateSession, authenticateToken,
-  withLimitsChecks(walletController.depositFunds),
-)
-router.post(
-  '/withdrawals',
-  authenticateSession, authenticateToken,
-  withLimitsChecks(walletController.withdrawFunds),
-)
-router.post(
-  '/rollbacks',
-  authenticateSession, authenticateToken,
-  walletController.rollback,
-)
+router.get('/balances', authenticateSession, walletController.getBalance)
+router.post('/deposits', authenticateSession, authenticateToken, withLimitsChecks(walletController.depositFunds))
+router.post('/withdrawals', authenticateSession, authenticateToken, withLimitsChecks(walletController.withdrawFunds))
+router.post('/rollbacks', authenticateSession, authenticateToken, walletController.rollback)
 
 export default router

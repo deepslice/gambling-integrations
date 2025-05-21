@@ -8,15 +8,15 @@ export class ApiService {
     const {gameId, userId, prefix, wageringBalanceId} = data
 
     const config = await configService.loadConfig(prefix)
+    const projectId = config?.id
     const operatorId = config?.operatorId
     const token = randomBytes(36).toString('hex')
 
     await AuthSessionService.setSession(`aspect-initial-token:${token}`,
-      JSON.stringify({userId, prefix, wageringBalanceId}),
+      JSON.stringify({userId, projectId, prefix, wageringBalanceId}),
       30 * 60 * 60,
     )
 
-    console.log('im here', token)
     try {
       const resp = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`)
       return resp.config?.url

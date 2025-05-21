@@ -52,8 +52,8 @@ export class TransactionModel {
                                                  section, round_id, freespin_id)
                 values (?, concat(?, ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.convertedAmount, data.transactionId, TransactionTypeEnum.BET,
-        data.userId, 'BET', 'aspect', data.provider, data.gameUuid,
+        data.convertedAmount, data.transactionId, data.isBet ? TransactionTypeEnum.BET : TransactionTypeEnum.WIN,
+        data.userId, data.action, 'aspect', data.provider, data.gameUuid,
         data.nativeCurrency, data.sessionToken, data.section,
         data.transactionId, data.wageringBalanceId ? data.wageringBalanceId : null,
       ],

@@ -1,5 +1,5 @@
 import {describe, expect, it, jest} from '@jest/globals'
-import {WalletService} from '#app/services/wallet.service'
+import {Deprecated} from '#app/services/.deprecated'
 import {fixNumber} from '#app/utils/math.util'
 
 describe('Wallet Service', () => {
@@ -14,7 +14,7 @@ describe('Wallet Service', () => {
   const wageringServiceMock = {}
 
   // Целевой сервис с внедренными mocks
-  const walletService = new WalletService(
+  const walletService = new Deprecated(
     userRepositoryMock,
     gameRepositoryMock,
     roundRepositoryMock,

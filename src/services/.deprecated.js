@@ -13,7 +13,7 @@ import {isGameActive, isUserActive} from '#app/utils/common.util'
 import {assertField} from '#app/utils/assert.util'
 import {fixNumber} from '#app/utils/math.util'
 
-export class WalletService {
+export class Deprecated {
 
   constructor(
     userRepository = new UserRepository(),
