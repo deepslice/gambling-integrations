@@ -1,4 +1,4 @@
-import {databaseConnection} from 'core-infra/database/connection.js'
+import {databaseConnection} from '@core-infra/database'
 
 async function insertData(data) {
   const columns = data.columns.map(col => `\`${col}\``).join(', ')
@@ -103,39 +103,38 @@ async function main() {
     options: '{}',
   })
 
-  // const connection = await databaseConnection.getConnection()
-  // const [[{prefix}]] = await connection.query(`
-  //     select prefix
-  //     from casino.aspect_configs limit 1`)
-  //
-  // const [[settings]] = await connection.query(`
-  //     select *
-  //     from global.settings
-  //     where prefix = ?`, [prefix])
-  //
-  // if (!settings) {
-  //   await connection.query(`
-  //       insert into global.settings (id, name, project, prefix, db_name, configs, sportsbook, readonly)
-  //       values (NULL,
-  //               'default',
-  //               'casino',
-  //               ?,
-  //               'casino',
-  //               '{ "currency": "USD", "database": "", "secretKey": "test", "operatorId": "12345" }',
-  //               0,
-  //               0);`, [prefix])
-  //
-  //   await connection.query(`
-  //       insert into global.configurations (prefix, code, value)
-  //       values (?, 'balance_limit', '1000');`, [prefix])
-  //
-  //   await connection.query(`
-  //       insert into global.configurations (prefix, code, value)
-  //       values (?, 'win_limit', '1000');`, [prefix])
-  // }
+  const connection = await databaseConnection.getConnection()
+  const [[{prefix}]] = await connection.query(`
+      select prefix
+      from casino.aspect_configs limit 1`)
+
+  const [[settings]] = await connection.query(`
+      select *
+      from global.settings
+      where prefix = ?`, [prefix])
+
+  if (!settings) {
+    await connection.query(`
+        insert into global.settings (id, name, project, prefix, db_name, configs, sportsbook, readonly)
+        values (NULL,
+                'default',
+                'casino',
+                ?,
+                'casino',
+                '{ "currency": "USD", "database": "", "secretKey": "test", "operatorId": "12345" }',
+                0,
+                0);`, [prefix])
+
+    await connection.query(`
+        insert into global.configurations (prefix, code, value)
+        values (?, 'balance_limit', '1000');`, [prefix])
+
+    await connection.query(`
+        insert into global.configurations (prefix, code, value)
+        values (?, 'win_limit', '1000');`, [prefix])
+  }
+
+  console.log('prefix:', prefix)
 }
 
 main().catch(e => console.log(e))
-// global.settings
-// global.configurations
-// global.configurations

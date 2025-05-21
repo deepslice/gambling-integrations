@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fs from 'node:fs'
-import {databaseConnection} from 'core-infra/database/connection.js'
+import {databaseConnection} from '@core-infra/database'
 
 const applied = new Set()
 const DEFAULT_MIGRATIONS_DIR = path.join(process.cwd(), 'migrations')

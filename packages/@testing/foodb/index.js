@@ -1,6 +1,6 @@
 // src/main.js
+import {databaseConnection} from '@core-infra/database'
 import {foodb} from './foodb.js'
-import {databaseConnection} from 'core-infra/database/connection.js'
 
 const defaultCardinality = 3
 const references = new Map()

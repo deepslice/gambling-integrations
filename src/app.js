@@ -4,6 +4,7 @@ import apiRoutes from '#integrations/aspect/routes/api.routes'
 import walletRoutes from '#integrations/aspect/routes/wallet.routes'
 
 const app = express()
+app.use(express.json())
 
 switch (process.env.PROJECT) {
   case 'aspect':
@@ -14,7 +15,6 @@ switch (process.env.PROJECT) {
     throw new Error('Invalid project id')
 }
 
-app.use(express.json())
 export default app
 
 await app.listen(process.env.APP_PORT || 3000)

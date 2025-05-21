@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "core-infra": "file:../../core-infra"
+  "peerDependencies": {
+    "@core-infra/database": "file:../../@core-infra/database"
   }
 }

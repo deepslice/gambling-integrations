@@ -26,3 +26,5 @@ export class GameInitApi {
     }
   }
 }
+
+export const gameInitApi = new GameInitApi()
