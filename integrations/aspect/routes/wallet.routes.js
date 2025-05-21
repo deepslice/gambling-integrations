@@ -1,5 +1,7 @@
 import {Router} from 'express'
-import {walletController} from 'integrations/aspect/controllers/wallet.controller.js'
+
+import {walletController} from '#integrations/aspect/controllers/wallet.controller'
+
 import {authenticateSession} from '#app/modules/auth/middlewares/auth-session.middleware'
 import {authenticateToken} from '#app/modules/auth/middlewares/auth-token.middleware'
 import {withLimitsChecks} from '#app/modules/limits/wrappers/with-limits-check.wrapper'

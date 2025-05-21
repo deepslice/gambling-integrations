@@ -1,5 +1,6 @@
 import {Router} from 'express'
-import {apiController} from 'integrations/aspect/controllers/api.controller.js'
+
+import {apiController} from '#integrations/aspect/controllers/api.controller'
 
 const router = new Router()
 
