@@ -180,6 +180,8 @@ export class WalletService {
       throw new Error('Game not found or invalid')
     }
 
+    console.log('has valid user and game!')
+
     // 3. Конвертируем валюту пользователя, при необходимости
     const convertSettings = await this.currencyService.getConvertSettings(context.prefix)
     const convertedBalance = await this.currencyService.convert(

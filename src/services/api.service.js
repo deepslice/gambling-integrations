@@ -1,5 +1,5 @@
 import axios from 'axios'
-import redis from 'core-infra/cache/index.js'
+import {AuthSessionService} from '#app/modules/auth/auth-session.service'
 import {randomBytes} from 'node:crypto'
 import {configService} from '#app/modules/config/config.service'
 
@@ -9,14 +9,14 @@ export class ApiService {
 
     const config = await configService.loadConfig(prefix)
     const operatorId = config?.operatorId
-
     const token = randomBytes(36).toString('hex')
-    await redis.set(
-      `aspect-initial-token:${token}`,
+
+    await AuthSessionService.setSession(`aspect-initial-token:${token}`,
       JSON.stringify({userId, prefix, wageringBalanceId}),
       30 * 60 * 60,
     )
 
+    console.log('im here', token)
     try {
       const resp = await axios.get(`https://eu.agp.xyz/agp-launcher/${gameId}/?token=${token}&operatorId=${operatorId}&language=en-US`)
       return resp.config?.url

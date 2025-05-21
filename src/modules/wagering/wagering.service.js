@@ -1,4 +1,4 @@
-import {databaseConnection} from 'core-infra/database/connection'
+import {databaseConnection} from 'core-infra/database/connection.js'
 
 export class WageringService {
   constructor(
@@ -41,8 +41,7 @@ export class WageringService {
 
   async getWageringBalance(userId, wageringBalanceId, rate) {
     const [[wBalance]] = await this.database.query(`
-        select id          as id
-             , balance / ? as balance
+        select id as id, balance / ? as balance
         from wagering_balance
         where id = ?
           and user_id = ?

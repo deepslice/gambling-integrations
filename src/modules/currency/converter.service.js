@@ -1,6 +1,6 @@
-import redis from 'core-infra/cache/index'
-import {databaseConnection} from 'core-infra/database/connection'
+import redis from 'core-infra/cache/index.js'
 import {assertField} from '#app/utils/assert.util'
+import {databaseConnection} from 'core-infra/database/connection.js'
 
 export class CurrencyConverterService {
   constructor(
@@ -36,6 +36,10 @@ export class CurrencyConverterService {
           and provider = 'aspect'
     `, [prefix])
 
+    if (!convertSettings) {
+      return null
+    }
+
     return assertField(convertSettings, 'currency')
   }
 
@@ -55,3 +59,5 @@ export class CurrencyConverterService {
     return await this.cache.del(`exchange-rate:*:${prefix}`)
   }
 }
+
+export const currencyConverterService = new CurrencyConverterService()

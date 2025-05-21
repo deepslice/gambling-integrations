@@ -4,7 +4,7 @@ export class AppConfig {
     this.port = process.env.APP_PORT || 3000
     this.dbHost = process.env.DB_HOST || 'localhost'
     this.dbPort = process.env.DB_PORT || 3306
-    // this.dbName = process.env.DB_NAME || 'dbName'
+    this.dbName = process.env.DB_NAME || 'dbName'
     this.dbUser = process.env.DB_USER || 'dbUser'
     this.dbPassword = process.env.DB_PASSWORD || 'dbPassword'
     this.dbSsl = process.env.DB_SSL || 'false'

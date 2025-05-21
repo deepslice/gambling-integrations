@@ -1,26 +1,25 @@
 import {databaseConnection} from 'core-infra/database/connection.js'
 
-const getGameInfo = `
-    SELECT g.uuid AS uuid, g.provider AS provider, g.aggregator AS aggregator, g.site_section AS section
-        , g.name                      AS name
-        , g.provider_uid              AS providerUid
-        , final_game_id               AS finalGameId
-        , ifnull(cg.active, g.active) AS active
-        , deleted                     AS deleted
-    FROM casino.games g LEFT JOIN casino_games cg
-    ON g.uuid = cg.uuid
-    WHERE g.uuid = concat('as:', ?) AND aggregator = 'aspect'`
-
 export class GameModel {
   constructor(database = databaseConnection) {
     this.database = database
   }
 
   async getGameInfo(gameId) {
-    const [[game]] = await this.database.query(
-      getGameInfo, [gameId],
+    const [[game]] = await this.database.query(`
+                select g.uuid as uuid, g.provider as provider, g.aggregator as aggregator, g.site_section as section
+        , g.name                      as name
+        , g.provider_uid              as providerUid
+        , g.final_game_id             as finalGameId
+        , g.active                    as active
+        , g.deleted                   as deleted
+                from casino.games g
+                where g.uuid = concat('as:', ?) and g.aggregator = 'aspect'`,
+      [gameId],
     )
 
     return game
   }
 }
+
+export const gameRepository = new GameModel()

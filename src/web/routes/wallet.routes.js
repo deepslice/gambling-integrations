@@ -1,5 +1,5 @@
 import {Router} from 'express'
-import {WalletController} from '#app/web/controllers/wallet.controller'
+import {walletController} from '#app/web/controllers/wallet.controller'
 import {authenticateSession} from '#app/modules/auth/middlewares/auth-session.middleware'
 import {authenticateToken} from '#app/modules/auth/middlewares/auth-token.middleware'
 import {withLimitsChecks} from '#app/modules/limits/wrappers/with-limits-check.wrapper'
@@ -12,23 +12,23 @@ const router = Router()
 
 router.get(
   '/balances',
-  authenticateSession, authenticateToken,
-  WalletController.getBalance,
+  authenticateSession,
+  walletController.getBalance,
 )
 router.post(
   '/deposits',
   authenticateSession, authenticateToken,
-  withLimitsChecks(WalletController.depositFunds),
+  withLimitsChecks(walletController.depositFunds),
 )
 router.post(
   '/withdrawals',
   authenticateSession, authenticateToken,
-  withLimitsChecks(WalletController.withdrawFunds),
+  withLimitsChecks(walletController.withdrawFunds),
 )
 router.post(
   '/rollbacks',
   authenticateSession, authenticateToken,
-  WalletController.rollback,
+  walletController.rollback,
 )
 
 export default router

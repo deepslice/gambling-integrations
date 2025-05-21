@@ -1,11 +1,11 @@
-import {databaseConnection} from 'core-infra/database/connection.js'
+import container from '#app/dependencies/container.deps'
 
 export class UserModel {
-  constructor(database = databaseConnection) {
+  constructor(database = container.database) {
     this.database = database
   }
 
-  static async getUserParents() {
+  async getUserParents() {
 
   }
 
@@ -38,3 +38,5 @@ export class UserModel {
     return user
   }
 }
+
+export const userRepository = new UserModel()

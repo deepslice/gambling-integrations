@@ -1,4 +1,4 @@
-import {Container} from '#app/dependencies/container.deps'
+import container from '#app/dependencies/container.deps'
 
 const ConfigTypeEnum = {
   ASPECT: 'aspect',
@@ -6,7 +6,7 @@ const ConfigTypeEnum = {
 }
 
 class ConfigService {
-  constructor(configType = ConfigTypeEnum.ASPECT, database = new Container().database) {
+  constructor(configType = ConfigTypeEnum.ASPECT, database = container.database) {
     this.database = database
     this.configType = configType
   }
@@ -31,7 +31,7 @@ class ConfigService {
   }
 
   async getConfig(prefix) {
-    const [[project]] = this.database.query(`
+    const [[project]] = await this.database.query(`
         select s.id                                               as id
              , s.prefix                                           as prefix
              , s.db_name                                          as db

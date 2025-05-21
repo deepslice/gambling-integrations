@@ -1,17 +1,27 @@
+import {getBalance} from '#app/services/wallet/balance.wallet'
+import {assertField} from '#app/utils/assert.util'
+
 export class WalletController {
-  static async getBalance(req, res) {
+
+  getBalance = async (req, res) => {
+    const response = await getBalance(
+      assertField(req, 'session'),
+      assertField(req.query, 'gameId'),
+    )
+    res.status(200).json(response).end()
+  }
+
+  depositFunds = async (req, res) => {
     res.status(200).end()
   }
 
-  static async depositFunds(req, res) {
+  withdrawFunds = async (req, res) => {
     res.status(200).end()
   }
 
-  static async withdrawFunds(req, res) {
-    res.status(200).end()
-  }
-
-  static async rollback(req, res) {
+  rollback = async (req, res) => {
     res.status(200).end()
   }
 }
+
+export const walletController = new WalletController()

@@ -1,19 +1,19 @@
 import {AuthSessionService} from '#app/modules/auth/auth-session.service'
 import {assertField} from '#app/utils/assert.util'
 
-export const authenticateSession = (req, res, next) => {
+export const authenticateSession = async (req, res, next) => {
   const token = assertField(req.query, 'token') // Session token
 
   if (!token) {
     return res.status(401).json({message: 'No token provided'})
   }
 
-  AuthSessionService.validateSession(token).then(isValid => {
-    if (!isValid) {
-      return res.status(403).json({message: 'Invalid token'})
-    }
+  const isValid = await AuthSessionService.validateSession(token)
+  if (!isValid) {
+    return res.status(403).json({message: 'Invalid token'})
+  }
 
-    req.token = token
-    next()
-  })
+  req.session = await AuthSessionService.getSession(token)
+  req.token = token
+  next()
 }
