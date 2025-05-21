@@ -1,8 +1,8 @@
-import {ApiService} from '#app/services/api/api.service'
+import {GameInitApi} from '#app/services/api/game-init.api'
 
 export class ApiController {
 
-  constructor(apiService = new ApiService()) {
+  constructor(apiService = new GameInitApi()) {
     this.apiService = apiService
   }
 

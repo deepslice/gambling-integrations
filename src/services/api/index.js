@@ -1,1 +1,1 @@
-export * from './api.service.js'
+export * from './game-init.api.js'

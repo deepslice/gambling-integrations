@@ -3,7 +3,7 @@ import {AuthSessionService} from '#app/modules/auth/auth-session.service'
 import {randomBytes} from 'node:crypto'
 import {configService} from '#app/modules/config/config.service'
 
-export class ApiService {
+export class GameInitApi {
   async gameInit(data) {
     const {gameId, userId, prefix, wageringBalanceId} = data
 
